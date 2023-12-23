@@ -8,8 +8,6 @@ import okio.ByteString
 
 
 class HttpWebSocket {
-    var WEB_SOCKET_URL = "ws://192.168.0.10:8080/homepage/websocket.message"
-
     var listener: WebSocketListener = object : WebSocketListener() {
         override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
             super.onClosed(webSocket, code, reason)
