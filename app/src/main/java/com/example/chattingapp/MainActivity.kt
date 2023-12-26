@@ -73,8 +73,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun appendStatus(message: String) {
-        binding.status.append(getString(R.string.status_line, lineNumber, message))
-        lineNumber++
+//        binding.status.append(getString(R.string.status_line, lineNumber, message))
+//        lineNumber++
     }
 
     private fun askNotificationPermission() {
