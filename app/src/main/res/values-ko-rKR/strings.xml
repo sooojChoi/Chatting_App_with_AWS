@@ -23,7 +23,9 @@
     <string name="action_sign_in_short">로그인</string>
     <string name="welcome">환영합니다!</string>
     <string name="invalid_username">"유효하지 않은 이메일입니다. "</string>
-    <string name="invalid_password">"유효하지 않은 비밀번호입니다. "</string>
+    <string name="invalid_password">"영어 대소문자, 숫자, 특수기호가 포함된 8글자 이상이어야 합니다. "</string>
     <string name="login_failed">로긔인에 실패하였습니다.</string>
     <string name="action_sign_up">회원가입</string>
+    <string name="email_conform_hint">인증번호를 입력하세요.</string>
+    <string name="name_hint">이름</string>
 </resources>

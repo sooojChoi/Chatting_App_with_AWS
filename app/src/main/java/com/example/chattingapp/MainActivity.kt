@@ -20,6 +20,11 @@ import org.json.JSONObject
 import com.example.chattingapp.HttpWebSocket
 import okio.ByteString
 import android.Manifest
+import android.content.Intent
+import com.amplifyframework.AmplifyException
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
+import com.amplifyframework.core.Amplify
+import com.example.chattingapp.ui.login.LoginActivity
 
 class MainActivity : AppCompatActivity() {
     val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
@@ -30,9 +35,28 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+
+        // aws의 amplify를 사용하기 위해 초기화. (for using cognito)
+        try {
+            Amplify.addPlugin(AWSCognitoAuthPlugin())
+            Amplify.configure(applicationContext)
+            Log.i("chattingApp", "Initialized Amplify")
+        } catch (error: AmplifyException) {
+            Log.e("chattingApp", "Could not initialize Amplify", error)
+        }
+        // 현재 인증 세션을 가져온다.
+        Amplify.Auth.fetchAuthSession(
+            { Log.i("AmplifyQuickstart", "Auth session = $it")
+            if(!it.isSignedIn){
+                startActivity(Intent(this, LoginActivity::class.java))
+                finish()
+            }},
+            { error -> Log.e("AmplifyQuickstart", "Failed to fetch auth session", error) }
+        )
+
         // 버튼을 누르면 메시지를 보낸다.
         binding.button.setOnClickListener { sendCommand("turn_on_lights") }
-        // 소켓을 생성하고
+        // 소켓을 생성.
         setupWebSocket()
 
         // Declare the launcher at the top of your Activity/Fragment:

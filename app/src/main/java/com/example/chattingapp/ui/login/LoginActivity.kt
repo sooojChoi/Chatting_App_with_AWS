@@ -1,24 +1,22 @@
 package com.example.chattingapp.ui.login
 
-import android.app.Activity
-import androidx.lifecycle.Observer
-import androidx.lifecycle.ViewModelProvider
+import android.content.Intent
 import android.os.Bundle
-import androidx.annotation.StringRes
-import androidx.appcompat.app.AppCompatActivity
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
+import android.util.Patterns
 import android.view.View
-import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import android.widget.Toast
-import com.example.chattingapp.databinding.ActivityLoginBinding
-
+import androidx.appcompat.app.AppCompatActivity
 import com.example.chattingapp.R
+import com.example.chattingapp.databinding.ActivityLoginBinding
+import kotlin.io.*
+
 
 class LoginActivity : AppCompatActivity() {
 
-    private lateinit var loginViewModel: LoginViewModel
     private lateinit var binding: ActivityLoginBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -27,92 +25,83 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        val username = binding.username
-        val password = binding.password
-        val login = binding.login
+        val email = binding.emailTextView
+        val password = binding.passwordTextView
+        val loginButton = binding.loginButton
+        val signUpButton = binding.signUpButton
         val loading = binding.loading
 
-        loginViewModel = ViewModelProvider(this, LoginViewModelFactory())
-            .get(LoginViewModel::class.java)
 
-        loginViewModel.loginFormState.observe(this@LoginActivity, Observer {
-            val loginState = it ?: return@Observer
-
-            // disable login button unless both username / password is valid
-            login.isEnabled = loginState.isDataValid
-
-            if (loginState.usernameError != null) {
-                username.error = getString(loginState.usernameError)
+        // 로그인 버튼 눌림
+        loginButton?.setOnClickListener {
+            // 이메일이 올바른 형식이면 로그인 시도
+            if(isUserNameValid(email?.text.toString())){
+                loading.visibility = View.VISIBLE
+                login(email?.text.toString(), password?.text.toString())
             }
-            if (loginState.passwordError != null) {
-                password.error = getString(loginState.passwordError)
-            }
-        })
 
-        loginViewModel.loginResult.observe(this@LoginActivity, Observer {
-            val loginResult = it ?: return@Observer
-
-            loading.visibility = View.GONE
-            if (loginResult.error != null) {
-                showLoginFailed(loginResult.error)
-            }
-            if (loginResult.success != null) {
-                updateUiWithUser(loginResult.success)
-            }
-            setResult(Activity.RESULT_OK)
-
-            //Complete and destroy login activity once successful
-            finish()
-        })
-
-        username.afterTextChanged {
-            loginViewModel.loginDataChanged(
-                username.text.toString(),
-                password.text.toString()
-            )
         }
 
-        password.apply {
-            afterTextChanged {
-                loginViewModel.loginDataChanged(
-                    username.text.toString(),
-                    password.text.toString()
-                )
-            }
-
-            setOnEditorActionListener { _, actionId, _ ->
-                when (actionId) {
-                    EditorInfo.IME_ACTION_DONE ->
-                        loginViewModel.login(
-                            username.text.toString(),
-                            password.text.toString()
-                        )
-                }
-                false
-            }
-
-            login.setOnClickListener {
-                loading.visibility = View.VISIBLE
-                loginViewModel.login(username.text.toString(), password.text.toString())
-            }
+        // 회원가입 버튼 눌림
+        signUpButton?.setOnClickListener {
+            // 회원가입 화면으로 이동
+            startActivity(Intent(this, SignUpActivity::class.java))
         }
     }
 
-    private fun updateUiWithUser(model: LoggedInUserView) {
+    private fun login(username: String, password:String){
+
+    }
+
+    private fun updateUiWithUser() {
         val welcome = getString(R.string.welcome)
-        val displayName = model.displayName
         // TODO : initiate successful logged in experience
         Toast.makeText(
             applicationContext,
-            "$welcome $displayName",
+            "$welcome 회원가입이 완료되었습니다.",
             Toast.LENGTH_LONG
         ).show()
     }
 
-    private fun showLoginFailed(@StringRes errorString: Int) {
+    private fun showLoginFailed(errorString: String) {
         Toast.makeText(applicationContext, errorString, Toast.LENGTH_SHORT).show()
     }
+
+    // 이메일, 비밀번호가 유효한 형식인지 확인하는 함수
+    fun isValidData(email: String, password: String): Boolean{
+        if (!isUserNameValid(email)) {
+            showLoginFailed("이메일 형식이 유효하지 않습니다.")
+        } else if (!isPasswordValid(password)) {
+            showLoginFailed("비밀번호 형식이 유효하지 않습니다.")
+        } else {
+            return true
+        }
+        return false
+    }
+
+    // A placeholder username validation check
+    private fun isUserNameValid(username: String): Boolean {
+        return if (username.contains('@')) {
+            Patterns.EMAIL_ADDRESS.matcher(username).matches()
+        } else {
+            username.isNotBlank()
+        }
+    }
+
+    // A placeholder password validation check
+    private fun isPasswordValid(password: String): Boolean {
+
+        val digitAndStr = password.any { it.isDigit() }
+                && password.any{it.isUpperCase() }
+                && password.any{it.isLowerCase() }
+        val regex = Regex("[^a-zA-Z0-9]")
+        val specialChar = regex.containsMatchIn(password)
+        return password.length >= 8 && digitAndStr && specialChar
+    }
+
 }
+
+
 
 /**
  * Extension function to simplify setting an afterTextChanged action to EditText components.

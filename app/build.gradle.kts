@@ -50,6 +50,7 @@ dependencies {
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
     implementation("com.google.firebase:firebase-messaging:23.4.0")
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.6")
+    implementation("androidx.fragment:fragment-ktx:1.5.5")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.6")
     implementation("androidx.annotation:annotation:1.7.1")
     implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.6.2")
@@ -60,5 +61,13 @@ dependencies {
 
     implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
     implementation("com.google.firebase:firebase-analytics")
+
+    // aws cognito
+    implementation("aws.sdk.kotlin:cognitoidentityprovider:1.0.0")
+    implementation("aws.sdk.kotlin:cognitoidentity:1.0.0")
+
+    //amplify
+    implementation("com.amplifyframework:aws-auth-cognito:2.14.6")
+    implementation("com.amplifyframework:core:2.14.6")
 
 }
