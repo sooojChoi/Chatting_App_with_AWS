@@ -55,10 +55,7 @@ class EnterConformCodeFragment : Fragment() {
                                     { result ->
                                         if (result.isSignedIn) {
                                             Log.i("AuthQuickstart", "Sign in succeeded")
-                                            startActivity(Intent(activity, MainActivity::class.java))
-                                            activity?.supportFragmentManager
-                                                ?.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE)
-
+                                            (activity as SignUpActivity).goToMainAcitivity()
                                         } else {
                                             Log.i("AuthQuickstart", "Sign in not complete")
                                         }

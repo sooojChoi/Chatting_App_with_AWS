@@ -72,10 +72,14 @@
         android:id="@+id/pwInfoTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text=""
-        android:visibility="gone"
+        android:layout_marginTop="3dp"
+        android:paddingHorizontal="3dp"
+        android:maxLines="3"
+        android:text="비밀번호는 대소문자 영문, 숫자, 특수기호를 포함한 8자 이상이어야 합니다."
+        android:textColor="@color/gray"
         android:textSize="13sp"
+        android:visibility="visible"
+        app:layout_constraintEnd_toEndOf="@+id/editTextPassword"
         app:layout_constraintStart_toStartOf="@+id/editTextPassword"
         app:layout_constraintTop_toBottomOf="@+id/editTextPassword" />
 
@@ -93,4 +97,29 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pwInfoTextView" />
+
+    <Button
+        android:id="@+id/goToConform"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
+        android:text="가입했는데 인증이 되지 않았어요!"
+        android:textSize="16sp"
+        android:backgroundTint="@color/main_orange"
+        app:layout_constraintEnd_toEndOf="@+id/signUpButton"
+        app:layout_constraintStart_toStartOf="@+id/signUpButton"
+        app:layout_constraintTop_toBottomOf="@+id/signUpButton" />
+
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dp"
+        android:maxLines="2"
+        android:text="인증되지 않은 경우, 상단의 회원 정보를 입력한 후\n 주황색 버튼을 눌러주세요."
+        android:textColor="@color/gray"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="@+id/goToConform"
+        app:layout_constraintStart_toStartOf="@+id/goToConform"
+        app:layout_constraintTop_toBottomOf="@+id/goToConform" />
 </androidx.constraintlayout.widget.ConstraintLayout>

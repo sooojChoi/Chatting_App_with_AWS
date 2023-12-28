@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/sign_up_nav"
-    app:startDestination="@id/signUpUserInfoFragment">
+    app:startDestination="@id/loginFragment">
 
     <fragment
         android:id="@+id/enterConformCodeFragment"
@@ -11,9 +11,9 @@
         android:label="fragment_enter_conform_code"
         tools:layout="@layout/fragment_enter_conform_code" >
         <action
-            android:id="@+id/action_enterConformCodeFragment_to_signUpUserInfoFragment"
-            app:destination="@id/signUpUserInfoFragment"
-            app:popUpTo="@id/signUpUserInfoFragment"
+            android:id="@+id/action_enterConformCodeFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/loginFragment"
             app:popUpToInclusive="true" />
     </fragment>
     <fragment
@@ -24,5 +24,14 @@
         <action
             android:id="@+id/action_signUpUserInfoFragment_to_enterConformCodeFragment"
             app:destination="@id/enterConformCodeFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/loginFragment"
+        android:name="com.example.chattingapp.ui.login.LoginFragment"
+        android:label="fragment_login"
+        tools:layout="@layout/fragment_login" >
+        <action
+            android:id="@+id/action_loginFragment_to_signUpUserInfoFragment"
+            app:destination="@id/signUpUserInfoFragment" />
     </fragment>
 </navigation>
