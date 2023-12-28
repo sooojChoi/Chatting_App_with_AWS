@@ -37,3 +37,6 @@ amplifytools.xcconfig
 #amplify-do-not-edit-end
 
 strings.xml
+
+app/google-services.json
+app/src/main/res/values/string.xml
