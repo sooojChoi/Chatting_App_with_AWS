@@ -16,10 +16,10 @@ import okhttp3.WebSocket
 import org.json.JSONObject
 import android.Manifest
 import android.content.Intent
-import android.widget.Toast
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.setupWithNavController
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
-import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
 import com.amplifyframework.core.Amplify
 import com.example.chattingapp.ui.login.SignUpActivity
 
@@ -51,49 +51,56 @@ class MainActivity : AppCompatActivity() {
             { error -> Log.e("AmplifyQuickstart", "Failed to fetch auth session", error) }
         )
 
-        // 버튼을 누르면 메시지를 보낸다.
-        binding.button.setOnClickListener { sendCommand("turn_on_lights") }
-        // 소켓을 생성.
-        setupWebSocket()
+        // setup actionbar with nav controller to show up button
+        val navHostFragment =
+            supportFragmentManager.findFragmentById(R.id.fragment) as NavHostFragment
+        val navController = navHostFragment.navController
+        val bottomNavigationView = binding.bottomNav
+        bottomNavigationView.setupWithNavController(navController)
 
-        binding.logoutButton.setOnClickListener {
-            Amplify.Auth.signOut { signOutResult ->
-                when(signOutResult) {
-                    is AWSCognitoAuthSignOutResult.CompleteSignOut -> {
-                        // Sign Out completed fully and without errors.
-                        Log.i("AuthQuickStart", "Signed out successfully")
-                        runOnUiThread {
-                            Toast.makeText(this, "로그아웃 되었습니다. ", Toast.LENGTH_SHORT).show()
-                        }
-                        startActivity(Intent(this, SignUpActivity::class.java))
-                        finish()
-                    }
-                    is AWSCognitoAuthSignOutResult.PartialSignOut -> {
-                        // Sign Out completed with some errors. User is signed out of the device.
-                        signOutResult.hostedUIError?.let {
-                            Log.e("AuthQuickStart", "HostedUI Error", it.exception)
-                            // Optional: Re-launch it.url in a Custom tab to clear Cognito web session.
-
-                        }
-                        signOutResult.globalSignOutError?.let {
-                            Log.e("AuthQuickStart", "GlobalSignOut Error", it.exception)
-                            // Optional: Use escape hatch to retry revocation of it.accessToken.
-                        }
-                        signOutResult.revokeTokenError?.let {
-                            Log.e("AuthQuickStart", "RevokeToken Error", it.exception)
-                            // Optional: Use escape hatch to retry revocation of it.refreshToken.
-                        }
-                    }
-                    is AWSCognitoAuthSignOutResult.FailedSignOut -> {
-                        // Sign Out failed with an exception, leaving the user signed in.
-                        Log.e("AuthQuickStart", "Sign out Failed", signOutResult.exception)
-                        runOnUiThread {
-                            Toast.makeText(this, "로그아웃에 실패하였습니다. ", Toast.LENGTH_SHORT).show()
-                        }
-                    }
-                }
-            }
-        }
+//        // 버튼을 누르면 메시지를 보낸다.
+//        binding.button.setOnClickListener { sendCommand("turn_on_lights") }
+//        // 소켓을 생성.
+//        setupWebSocket()
+//
+//        binding.logoutButton.setOnClickListener {
+//            Amplify.Auth.signOut { signOutResult ->
+//                when(signOutResult) {
+//                    is AWSCognitoAuthSignOutResult.CompleteSignOut -> {
+//                        // Sign Out completed fully and without errors.
+//                        Log.i("AuthQuickStart", "Signed out successfully")
+//                        runOnUiThread {
+//                            Toast.makeText(this, "로그아웃 되었습니다. ", Toast.LENGTH_SHORT).show()
+//                        }
+//                        startActivity(Intent(this, SignUpActivity::class.java))
+//                        finish()
+//                    }
+//                    is AWSCognitoAuthSignOutResult.PartialSignOut -> {
+//                        // Sign Out completed with some errors. User is signed out of the device.
+//                        signOutResult.hostedUIError?.let {
+//                            Log.e("AuthQuickStart", "HostedUI Error", it.exception)
+//                            // Optional: Re-launch it.url in a Custom tab to clear Cognito web session.
+//
+//                        }
+//                        signOutResult.globalSignOutError?.let {
+//                            Log.e("AuthQuickStart", "GlobalSignOut Error", it.exception)
+//                            // Optional: Use escape hatch to retry revocation of it.accessToken.
+//                        }
+//                        signOutResult.revokeTokenError?.let {
+//                            Log.e("AuthQuickStart", "RevokeToken Error", it.exception)
+//                            // Optional: Use escape hatch to retry revocation of it.refreshToken.
+//                        }
+//                    }
+//                    is AWSCognitoAuthSignOutResult.FailedSignOut -> {
+//                        // Sign Out failed with an exception, leaving the user signed in.
+//                        Log.e("AuthQuickStart", "Sign out Failed", signOutResult.exception)
+//                        runOnUiThread {
+//                            Toast.makeText(this, "로그아웃에 실패하였습니다. ", Toast.LENGTH_SHORT).show()
+//                        }
+//                    }
+//                }
+//            }
+  //      }
 
         // Declare the launcher at the top of your Activity/Fragment:
         requestPermissionLauncher = registerForActivityResult(
