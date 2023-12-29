@@ -70,6 +70,7 @@ class SignUpUserInfoFragment : Fragment() {
             val options = AuthSignUpOptions.builder()
                 .userAttribute(AuthUserAttributeKey.email(), email)
                 .userAttribute(AuthUserAttributeKey.name(), username)
+
                 .build()
             Amplify.Auth.signUp(email, password, options,
                 { Log.i("AuthQuickStart", "Sign up succeeded: $it")

@@ -1,5 +1,6 @@
 package com.example.chattingapp.ui.login
 
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.util.Patterns
@@ -62,11 +63,12 @@ class LoginFragment : Fragment() {
         }
     }
 
-    private fun login(username: String, password:String){
-        Amplify.Auth.signIn(username, password,
+    private fun login(email: String, password:String){
+        Amplify.Auth.signIn(email, password,
             { result ->
                 if (result.isSignedIn) {
                     Log.i("AuthQuickstart", "Sign in succeeded")
+                    storeUserInfo(email)
                     (activity as SignUpActivity).goToMainAcitivity()
                 } else {
                     Log.i("AuthQuickstart", "Sign in not complete")
@@ -88,6 +90,14 @@ class LoginFragment : Fragment() {
 //        ).show()
 //    }
 
+    // user의 email을 내부저장소에 XML 파일로 저장한다.
+    fun storeUserInfo(email:String){
+        // 첫 번째 인자는 파일명, 두 번째 인자는 파일 접근 권한(보안상의 이유로 MODE_PRIVATE만 가능)
+        val shared = activity?.getSharedPreferences("userInfo", Context.MODE_PRIVATE)
+        val editor = shared?.edit()
+        editor?.putString("email",email)
+        editor?.apply()
+    }
     private fun showLoginFailed(errorString: String) {
         activity?.runOnUiThread {
             Toast.makeText(context, errorString, Toast.LENGTH_SHORT).show()

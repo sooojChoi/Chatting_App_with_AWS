@@ -1,7 +1,7 @@
 package com.example.chattingapp.ui.login
 
 import android.content.ContentValues.TAG
-import android.content.Intent
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -9,10 +9,8 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.ViewModelProvider
 import com.amplifyframework.core.Amplify
-import com.example.chattingapp.MainActivity
 import com.example.chattingapp.R
 import com.example.chattingapp.databinding.FragmentEnterConformCodeBinding
 
@@ -42,19 +40,20 @@ class EnterConformCodeFragment : Fragment() {
 
         binding.conformButton.setOnClickListener {
             val code = binding.conformCodeEditText.text.toString()
-            val username = viewModel.emailLiveData.value
+            val email = viewModel.emailLiveData.value
             val password = viewModel.passwordLiveData.value
             if(code.isNotEmpty()){
-                if (username != null) {
+                if (email != null) {
                     Amplify.Auth.confirmSignUp(
-                        username, binding.conformCodeEditText.text.toString(),
+                        email, binding.conformCodeEditText.text.toString(),
                         { result ->
                             if (result.isSignUpComplete) {
                                 // 로그인 하고 MainActivity로 가기.
-                                Amplify.Auth.signIn(username, password,
+                                Amplify.Auth.signIn(email, password,
                                     { result ->
                                         if (result.isSignedIn) {
                                             Log.i("AuthQuickstart", "Sign in succeeded")
+                                            storeUserId(email)
                                             (activity as SignUpActivity).goToMainAcitivity()
                                         } else {
                                             Log.i("AuthQuickstart", "Sign in not complete")
@@ -82,5 +81,14 @@ class EnterConformCodeFragment : Fragment() {
             }
 
         }
+    }
+
+    // user의 email을 내부저장소에 XML 파일로 저장한다.
+    fun storeUserId(email:String){
+        // 첫 번째 인자는 파일명, 두 번째 인자는 파일 접근 권한(보안상의 이유로 MODE_PRIVATE만 가능)
+        val shared = activity?.getSharedPreferences("userInfo", Context.MODE_PRIVATE)
+        val editor = shared?.edit()
+        editor?.putString("email",email)
+        editor?.apply()
     }
 }
