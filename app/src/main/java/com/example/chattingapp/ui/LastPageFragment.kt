@@ -8,11 +8,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.lifecycle.lifecycleScope
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.datastore.generated.model.User
 import com.example.chattingapp.MainActivity
 import com.example.chattingapp.R
 import com.example.chattingapp.databinding.FragmentLastPageBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class LastPageFragment : Fragment() {
 
@@ -76,6 +81,28 @@ class LastPageFragment : Fragment() {
                     }
                 }
             }
+        }
+
+
+        // dynamoDB에 putItem 시도
+        binding.putItemButton.setOnClickListener {
+            Log.i("Tutorial","put item button is clicked")
+            val shared = activity?.getSharedPreferences("userInfo", Context.MODE_PRIVATE)
+            // 해당 키의 데이터가 없으면 지정한 기본값을 반환한다.
+            val email = shared?.getString("email", null) ?: "null"
+            val name = shared?.getString("name", null) ?: "null"
+
+            val item = User.builder().name(name).id(email).build()
+            try{
+                Amplify.DataStore.save(item,
+                    { Log.i("MyAmplifyApp", "Created a new post successfully") },
+                    { Log.e("MyAmplifyApp", "Error creating post", it) }
+                )
+            }catch (e: Exception){
+                Log.i("MyAmplifyApp","error: $e")
+            }
+
+
         }
     }
 }

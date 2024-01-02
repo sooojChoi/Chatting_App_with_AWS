@@ -1,0 +1,5 @@
+{
+  "AppSyncApiName": "chattingapp",
+  "DynamoDBBillingMode": "PAY_PER_REQUEST",
+  "DynamoDBEnableServerSideEncryption": false
+}

@@ -28,6 +28,8 @@ android {
         }
     }
     compileOptions {
+        // For AGP 4.1+  // Support for Java 8 features
+        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
@@ -69,5 +71,12 @@ dependencies {
     //amplify
     implementation("com.amplifyframework:aws-auth-cognito:2.14.6")
     implementation("com.amplifyframework:core:2.14.6")
+
+    // Amplify API and Datastore dependencies
+    implementation("com.amplifyframework:aws-api:2.14.6")
+    implementation("com.amplifyframework:aws-datastore:2.14.6")
+
+    // Support for Java 8 features
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.2.2")
 
 }

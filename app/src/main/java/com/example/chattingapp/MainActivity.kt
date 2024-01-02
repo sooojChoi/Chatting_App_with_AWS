@@ -1,32 +1,33 @@
 package com.example.chattingapp
 
+import android.Manifest
 import android.content.ContentValues.TAG
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.setupWithNavController
+import com.amplifyframework.AmplifyException
+import com.amplifyframework.api.aws.AWSApiPlugin
+import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
+import com.amplifyframework.core.Amplify
 import com.example.chattingapp.databinding.ActivityMainBinding
+import com.example.chattingapp.ui.login.SignUpActivity
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.WebSocket
 import org.json.JSONObject
-import android.Manifest
-import android.content.Context
-import android.content.Intent
-import android.widget.Toast
-import androidx.navigation.fragment.NavHostFragment
-import androidx.navigation.ui.setupWithNavController
-import com.amplifyframework.AmplifyException
-import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
-import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
-import com.amplifyframework.auth.result.AuthSessionResult
-import com.amplifyframework.core.Amplify
-import com.example.chattingapp.ui.login.SignUpActivity
-import java.time.Duration
+import com.amplifyframework.datastore.AWSDataStorePlugin;
+
+
 
 class MainActivity : AppCompatActivity() {
     val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
@@ -131,6 +132,8 @@ class MainActivity : AppCompatActivity() {
     fun initAmplify(){
         // aws의 amplify를 사용하기 위해 초기화. (for using cognito)
         try {
+            Amplify.addPlugin(AWSApiPlugin())
+            Amplify.addPlugin(AWSDataStorePlugin())
             Amplify.addPlugin(AWSCognitoAuthPlugin())
             Amplify.configure(applicationContext)
             Log.i("chattingApp", "Initialized Amplify")
