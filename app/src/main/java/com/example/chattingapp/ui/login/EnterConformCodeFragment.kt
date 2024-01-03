@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.datastore.generated.model.User
 import com.example.chattingapp.R
 import com.example.chattingapp.databinding.FragmentEnterConformCodeBinding
 
@@ -42,10 +43,13 @@ class EnterConformCodeFragment : Fragment() {
             val code = binding.conformCodeEditText.text.toString()
             val email = viewModel.emailLiveData.value
             val password = viewModel.passwordLiveData.value
+            val name = viewModel.userNameLiveData.value
+
             if(code.isNotEmpty()){
                 if (email != null) {
+                    // email로 전송된 code로 confirm한다.
                     Amplify.Auth.confirmSignUp(
-                        email, binding.conformCodeEditText.text.toString(),
+                        email, code,
                         { result ->
                             if (result.isSignUpComplete) {
                                 // 로그인 하고 MainActivity로 가기.
@@ -53,7 +57,9 @@ class EnterConformCodeFragment : Fragment() {
                                     { result ->
                                         if (result.isSignedIn) {
                                             Log.i("AuthQuickstart", "Sign in succeeded")
-                                            storeUserId(email)
+                                            // device에 email, name 정보를 저장한다.
+                                            storeUserId(email, name ?: "이름을 다시 설정해주세요.")
+                                            // 이 액티비티를 제거하고 Main 화면으로 이동한다.
                                             (activity as SignUpActivity).goToMainAcitivity()
                                         } else {
                                             Log.i("AuthQuickstart", "Sign in not complete")
@@ -84,11 +90,13 @@ class EnterConformCodeFragment : Fragment() {
     }
 
     // user의 email을 내부저장소에 XML 파일로 저장한다.
-    fun storeUserId(email:String){
+    fun storeUserId(email:String, name:String){
         // 첫 번째 인자는 파일명, 두 번째 인자는 파일 접근 권한(보안상의 이유로 MODE_PRIVATE만 가능)
         val shared = activity?.getSharedPreferences("userInfo", Context.MODE_PRIVATE)
         val editor = shared?.edit()
         editor?.putString("email",email)
+        editor?.putString("name",name)
         editor?.apply()
     }
+
 }

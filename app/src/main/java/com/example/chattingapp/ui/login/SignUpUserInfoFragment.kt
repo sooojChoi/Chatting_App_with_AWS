@@ -16,6 +16,7 @@ import androidx.navigation.fragment.findNavController
 import com.amplifyframework.auth.AuthUserAttributeKey
 import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.datastore.generated.model.User
 import com.example.chattingapp.R
 import com.example.chattingapp.databinding.FragmentSignUpUserInfoBinding
 import kotlinx.coroutines.CoroutineScope
@@ -84,6 +85,9 @@ class SignUpUserInfoFragment : Fragment() {
                             Log.i(TAG, e.cause.toString())
 
                         }
+                        // dynamoDB에 회원 정보를 저장한다.
+                        storeUserInfoDynamoDB(email, username ?: "이름을 다시 설정해주세요.", "")
+                        // 코드를 인증하는 화면으로 이동한다.
                         findNavController().navigate(R.id.action_signUpUserInfoFragment_to_enterConformCodeFragment)
                     }
 
@@ -138,6 +142,19 @@ class SignUpUserInfoFragment : Fragment() {
         val regex = Regex("[^a-zA-Z0-9]")
         val specialChar = regex.containsMatchIn(password)
         return password.length >= 8 && digitAndStr && specialChar
+    }
+
+    // userInfo를 dynamoDB에 저장한다.
+    fun storeUserInfoDynamoDB(email:String, name:String, introduction:String){
+        val item = User.builder().name(name).id(email).introduction(introduction).build()
+        try{
+            Amplify.DataStore.save(item,
+                { Log.i("MyAmplifyApp", "Created a new post successfully") },
+                { Log.e("MyAmplifyApp", "Error creating post", it) }
+            )
+        }catch (e: Exception){
+            Log.i("MyAmplifyApp","error: $e")
+        }
     }
 
 

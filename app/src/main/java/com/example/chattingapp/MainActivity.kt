@@ -11,6 +11,7 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.navigation.fragment.NavHostFragment
@@ -18,15 +19,29 @@ import androidx.navigation.ui.setupWithNavController
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
+import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.core.Consumer
+import com.amplifyframework.core.async.Cancelable
+import com.amplifyframework.core.model.query.ObserveQueryOptions
+import com.amplifyframework.core.model.query.QuerySortBy
+import com.amplifyframework.core.model.query.QuerySortOrder
+import com.amplifyframework.core.model.query.Where
 import com.example.chattingapp.databinding.ActivityMainBinding
 import com.example.chattingapp.ui.login.SignUpActivity
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.WebSocket
 import org.json.JSONObject
-import com.amplifyframework.datastore.AWSDataStorePlugin;
-
+import com.amplifyframework.datastore.AWSDataStorePlugin
+import com.amplifyframework.datastore.DataStoreException
+import com.amplifyframework.datastore.DataStoreQuerySnapshot
+import com.amplifyframework.datastore.generated.model.User
+import com.example.chattingapp.ui.login.UserInfoViewModel
+import com.example.chattingapp.ui.login.UserModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity() {
@@ -35,14 +50,18 @@ class MainActivity : AppCompatActivity() {
     private var lineNumber = 0
     lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
     private lateinit var myEmail:String
+    private val viewModel: UserInfoViewModel by viewModels()
+    lateinit var coroutineScope: CoroutineScope
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+        coroutineScope= CoroutineScope(Dispatchers.IO)
 
+        // amplify pulgin추가, 초기화 작업
         initAmplify()
 
-        // setup actionbar with nav controller to show up button
+
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragment) as NavHostFragment
         val navController = navHostFragment.navController
@@ -135,7 +154,12 @@ class MainActivity : AppCompatActivity() {
             Amplify.addPlugin(AWSApiPlugin())
             Amplify.addPlugin(AWSDataStorePlugin())
             Amplify.addPlugin(AWSCognitoAuthPlugin())
-            Amplify.configure(applicationContext)
+            Amplify.configure(applicationContext).apply {
+                
+                Log.i("amplify datastore","설정 완료?")
+            }
+
+
             Log.i("chattingApp", "Initialized Amplify")
         } catch (error: AmplifyException) {
             Log.e("chattingApp", "Could not initialize Amplify", error)
@@ -156,7 +180,7 @@ class MainActivity : AppCompatActivity() {
                     Log.i(TAG,"SharedPreferences: my email: $myEmail")
                     // 소켓을 생성.
                     if(myEmail.contains('@')){
-                        setupWebSocket()
+                       // setupWebSocket()
                     }else{
                         runOnUiThread {
                             Toast.makeText(this,"서버에 연결할 수 없습니다.", Toast.LENGTH_SHORT).show()
@@ -167,6 +191,58 @@ class MainActivity : AppCompatActivity() {
                 }
             },
             { error -> Log.e("AmplifyQuickstart", "Failed to fetch auth session", error) }
+        )
+
+        // dynamoDB에서 사용자들의 정보를 가져온다.
+        getUserInfoFromDynamoDB()
+
+    }
+
+    fun getUserInfoFromDynamoDB(){
+        val tag = "ObserveQuery"
+        val onQuerySnapshot: Consumer<DataStoreQuerySnapshot<User>> =
+            Consumer<DataStoreQuerySnapshot<User>> { value: DataStoreQuerySnapshot<User> ->
+                Log.d(tag, "success on snapshot")
+                Log.d(tag, "number of records: " + value.items.size)
+                Log.d(tag, "sync status: " + value.isSynced)
+
+
+                val userArray = ArrayList<UserModel>()
+                value.items.forEach {
+                    if(it.id.equals(myEmail)){
+                        viewModel.emailLiveData.postValue(it.id)
+                        viewModel.userNameLiveData.postValue(it.name)
+                        viewModel.introductionLiveData.postValue(it.introduction)
+                    }else{
+                        userArray.add(UserModel(it.id, it.name, it.introduction))
+                    }
+                }
+                viewModel.otherUsersLiveData.postValue(userArray)
+                viewModel.otherUsersLiveData.value = userArray
+            }
+
+        val observationStarted =
+            Consumer { _: Cancelable ->
+                Log.d(tag, "success on cancelable")
+            }
+        val onObservationError =
+            Consumer { value: DataStoreException ->
+                Log.d(tag, "error on snapshot $value")
+            }
+        val onObservationComplete = Action {
+            Log.d(tag, "complete")
+        }
+        // val predicate: QueryPredicate = QueryPredicate()
+        val querySortBy = QuerySortBy("user", "name", QuerySortOrder.ASCENDING)
+
+        val options = ObserveQueryOptions(null, listOf(querySortBy))
+        Amplify.DataStore.observeQuery(
+            User::class.java,
+            options,
+            observationStarted,
+            onQuerySnapshot,
+            onObservationError,
+            onObservationComplete
         )
     }
 

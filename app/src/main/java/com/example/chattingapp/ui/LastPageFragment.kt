@@ -84,25 +84,25 @@ class LastPageFragment : Fragment() {
         }
 
 
-        // dynamoDB에 putItem 시도
-        binding.putItemButton.setOnClickListener {
-            Log.i("Tutorial","put item button is clicked")
-            val shared = activity?.getSharedPreferences("userInfo", Context.MODE_PRIVATE)
-            // 해당 키의 데이터가 없으면 지정한 기본값을 반환한다.
-            val email = shared?.getString("email", null) ?: "null"
-            val name = shared?.getString("name", null) ?: "null"
+//        // dynamoDB에 putItem 시도
+//        binding.putItemButton.setOnClickListener {
+//            Log.i("Tutorial","put item button is clicked")
+//            val shared = activity?.getSharedPreferences("userInfo", Context.MODE_PRIVATE)
+//            // 해당 키의 데이터가 없으면 지정한 기본값을 반환한다.
+//            val email = shared?.getString("email", null) ?: "null"
+//            val name = shared?.getString("name", null) ?: "null"
+//
+//            val item = User.builder().name(name).id(email).build()
+//            try{
+//                Amplify.DataStore.save(item,
+//                    { Log.i("MyAmplifyApp", "Created a new post successfully") },
+//                    { Log.e("MyAmplifyApp", "Error creating post", it) }
+//                )
+//            }catch (e: Exception){
+//                Log.i("MyAmplifyApp","error: $e")
+//            }
+//        }
 
-            val item = User.builder().name(name).id(email).build()
-            try{
-                Amplify.DataStore.save(item,
-                    { Log.i("MyAmplifyApp", "Created a new post successfully") },
-                    { Log.e("MyAmplifyApp", "Error creating post", it) }
-                )
-            }catch (e: Exception){
-                Log.i("MyAmplifyApp","error: $e")
-            }
 
-
-        }
     }
 }
