@@ -27,6 +27,7 @@ import com.amplifyframework.core.model.query.ObserveQueryOptions
 import com.amplifyframework.core.model.query.QuerySortBy
 import com.amplifyframework.core.model.query.QuerySortOrder
 import com.amplifyframework.core.model.query.Where
+import com.amplifyframework.core.model.query.predicate.QueryPredicates
 import com.example.chattingapp.databinding.ActivityMainBinding
 import com.example.chattingapp.ui.login.SignUpActivity
 import okhttp3.OkHttpClient
@@ -34,6 +35,7 @@ import okhttp3.Request
 import okhttp3.WebSocket
 import org.json.JSONObject
 import com.amplifyframework.datastore.AWSDataStorePlugin
+import com.amplifyframework.datastore.DataStoreConfiguration
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.DataStoreQuerySnapshot
 import com.amplifyframework.datastore.generated.model.User
@@ -152,7 +154,13 @@ class MainActivity : AppCompatActivity() {
         // aws의 amplify를 사용하기 위해 초기화. (for using cognito)
         try {
             Amplify.addPlugin(AWSApiPlugin())
-            Amplify.addPlugin(AWSDataStorePlugin())
+        //    Amplify.addPlugin(AWSDataStorePlugin())
+            Amplify.addPlugin(AWSDataStorePlugin.builder().dataStoreConfiguration(
+                DataStoreConfiguration.builder()
+                    .syncExpression(User::class.java){ QueryPredicates.all()}
+                    .build())
+                .build())
+
             Amplify.addPlugin(AWSCognitoAuthPlugin())
             Amplify.configure(applicationContext).apply {
                 
@@ -193,12 +201,13 @@ class MainActivity : AppCompatActivity() {
             { error -> Log.e("AmplifyQuickstart", "Failed to fetch auth session", error) }
         )
 
-        // dynamoDB에서 사용자들의 정보를 가져온다.
+        // local store에 대한 observe 등록
         getUserInfoFromDynamoDB()
 
     }
 
     fun getUserInfoFromDynamoDB(){
+        // local store에 대한 observe 등록
         val tag = "ObserveQuery"
         val onQuerySnapshot: Consumer<DataStoreQuerySnapshot<User>> =
             Consumer<DataStoreQuerySnapshot<User>> { value: DataStoreQuerySnapshot<User> ->
@@ -218,7 +227,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 viewModel.otherUsersLiveData.postValue(userArray)
-                viewModel.otherUsersLiveData.value = userArray
+              //  viewModel.otherUsersLiveData.value = userArray
             }
 
         val observationStarted =
@@ -244,6 +253,32 @@ class MainActivity : AppCompatActivity() {
             onObservationError,
             onObservationComplete
         )
+
+        // local data를 cloud와 re-sync
+        //changeSync()
+    }
+
+    fun changeSync(){
+        //local store의 데이터를 지우고 다시 cloud data와 sync 한다.
+        // 이때 syncExpression 조건을 변경하고 sync할 수 있다.
+        Amplify.DataStore.clear(
+            {
+                Amplify.DataStore.start(
+                    {
+                        Log.i("MyAmplifyApp", "DataStore started")
+
+                    },{
+                        Log.i("MyAmplifyApp", "DataStore Exception", it)
+                    }
+                )
+
+            },
+            { Log.e("MyAmplifyApp", "Error clearing DataStore", it) }
+        )
+    }
+
+    fun startEditSimpleProfileActivity() {
+
     }
 
 }

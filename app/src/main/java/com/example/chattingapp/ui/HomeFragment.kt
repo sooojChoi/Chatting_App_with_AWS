@@ -1,12 +1,16 @@
 package com.example.chattingapp.ui
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -84,12 +88,28 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val binding = FragmentHomeBinding.bind(view)
+        lateinit var resultLauncher: ActivityResultLauncher<Intent>
 
+
+        resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
+                result ->
+            if(result.resultCode == Activity.RESULT_OK){
+                // 어차피 datastore가 업데이트 되면서 observe 함수가 동작하여 viewmodel을 수정하고 ui도 수정될 듯.
+//                val name = result.data?.getStringExtra("name") ?: "not found"
+//                val introduction = result.data?.getStringExtra("introduction") ?: "not found"
+//
+//                viewModel.userNameLiveData.value = name
+//                viewModel.introductionLiveData.value = introduction
+            }
+        }
+
+
+        // 내 정보가 바뀌면 화면 정보를 바꾼다.
         viewModel.userNameLiveData.observe(viewLifecycleOwner){
             binding.myNameTextView.text = it
         }
         viewModel.introductionLiveData.observe(viewLifecycleOwner){
-            if(it==null){
+            if(it==null || it==""){
                 binding.myIntroTextView.text = "나의 소개글을 입력해보세요!"
             }else {
                 binding.myIntroTextView.text = it
@@ -102,8 +122,12 @@ class HomeFragment : Fragment() {
         // 내 프로필 클릭됨
         binding.myInfoLayout.setOnClickListener {
             Log.i("myInfoLayout","my profile is clicked")
-            // 내 이름, 내 상태 메시지 수정 가능
-
+            // 내 이름, 내 상태 메시지 수정하는 액티비티로 이동
+            val intent = Intent(activity, EditMySimpleProfileActivity::class.java)
+            intent.putExtra("email", viewModel.emailLiveData.value)
+            intent.putExtra("name", viewModel.userNameLiveData.value)
+            intent.putExtra("introduction", viewModel.introductionLiveData.value)
+            resultLauncher.launch(intent)
 
         }
 

@@ -42,6 +42,7 @@ public final class User implements Model {
   public String getName() {
       return name;
   }
+
   
   public String getIntroduction() {
       return introduction;
@@ -55,7 +56,7 @@ public final class User implements Model {
       return updatedAt;
   }
   
-  private User(String id, String name, String introduction) {
+  public User(String id, String name, String introduction) {
     this.id = id;
     this.name = name;
     this.introduction = introduction;
