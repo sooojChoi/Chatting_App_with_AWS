@@ -18,6 +18,7 @@ import aws.smithy.kotlin.runtime.util.length
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.model.query.Where
 import com.amplifyframework.datastore.generated.model.User
+import com.example.chattingapp.MainActivity
 import com.example.chattingapp.R
 import com.example.chattingapp.databinding.FragmentHomeBinding
 import com.example.chattingapp.ui.login.UserInfoViewModel
@@ -46,33 +47,6 @@ class HomeFragment : Fragment() {
 
         coroutineScope= CoroutineScope(Dispatchers.Main)
 
-//        coroutineScope.launch {
-//            Amplify.DataStore.query(User::class.java,
-//                Where.sorted(User.NAME.ascending()),
-//                { users ->
-//                    while (users.hasNext()) {
-//                        Log.i("amplify query","query 하는 중..")
-//                        val user = users.next()
-//                        // 내 정보이면 text
-//                        if(user.id.equals(myEmail)){
-//                            viewModel.emailLiveData.value = user.id
-//                            viewModel.userNameLiveData.value = user.name
-//                            viewModel.introductionLiveData.value = user.introduction
-//
-//                        }else{
-//                            Log.i("amplify query","나 말고 다른 사용자")
-//                            val userArray = ArrayList<UserModel>()
-//                            userArray.add(UserModel(user.id, user.name, user.introduction))
-//                            Log.i("amplify query","${user.id} ${user.name}")
-//                            Log.i("amplify query","userArray size: ${userArray.size}")
-//                            viewModel.otherUsersLiveData.value = userArray
-//                            Log.i("amplify query","view model arr size: ${viewModel.otherUsersLiveData.value!!.size}")
-//                        }
-//                    }
-//                },
-//                { Log.e("MyAmplifyApp", "Query failed", it) }
-//            )
-//        }
 
 
     }
@@ -83,6 +57,14 @@ class HomeFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_home, container, false)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        activity?.invalidateOptionsMenu()
+        activity?.setTitle("친구")
+
+
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {

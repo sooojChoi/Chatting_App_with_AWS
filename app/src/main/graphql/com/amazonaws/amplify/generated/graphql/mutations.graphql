@@ -50,3 +50,111 @@ mutation DeleteUser(
     __typename
   }
 }
+
+mutation CreateRoom(
+  $input: CreateRoomInput!
+  $condition: ModelRoomConditionInput
+) {
+  createRoom(input: $input, condition: $condition) {
+    id
+    name
+    last_msg_time
+    createdAt
+    updatedAt
+    _version
+    _deleted
+    _lastChangedAt
+    __typename
+  }
+}
+
+mutation UpdateRoom(
+  $input: UpdateRoomInput!
+  $condition: ModelRoomConditionInput
+) {
+  updateRoom(input: $input, condition: $condition) {
+    id
+    name
+    last_msg_time
+    createdAt
+    updatedAt
+    _version
+    _deleted
+    _lastChangedAt
+    __typename
+  }
+}
+
+mutation DeleteRoom(
+  $input: DeleteRoomInput!
+  $condition: ModelRoomConditionInput
+) {
+  deleteRoom(input: $input, condition: $condition) {
+    id
+    name
+    last_msg_time
+    createdAt
+    updatedAt
+    _version
+    _deleted
+    _lastChangedAt
+    __typename
+  }
+}
+
+mutation CreateGroup(
+  $input: CreateGroupInput!
+  $condition: ModelGroupConditionInput
+) {
+  createGroup(input: $input, condition: $condition) {
+    id
+    user_id
+    room_id
+    join_time
+    left_time
+    createdAt
+    updatedAt
+    _version
+    _deleted
+    _lastChangedAt
+    __typename
+  }
+}
+
+mutation UpdateGroup(
+  $input: UpdateGroupInput!
+  $condition: ModelGroupConditionInput
+) {
+  updateGroup(input: $input, condition: $condition) {
+    id
+    user_id
+    room_id
+    join_time
+    left_time
+    createdAt
+    updatedAt
+    _version
+    _deleted
+    _lastChangedAt
+    __typename
+  }
+}
+
+mutation DeleteGroup(
+  $input: DeleteGroupInput!
+  $condition: ModelGroupConditionInput
+) {
+  deleteGroup(input: $input, condition: $condition) {
+    id
+    user_id
+    room_id
+    join_time
+    left_time
+    createdAt
+    updatedAt
+    _version
+    _deleted
+    _lastChangedAt
+    __typename
+  }
+}

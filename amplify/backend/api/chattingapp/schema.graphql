@@ -7,3 +7,20 @@ type User @model {
   name: String!
   introduction: String
 }
+
+type Room @model {
+  id:ID!
+  name: String!
+  last_msg_time: String!
+}
+
+type Group @model{
+  id: ID!
+  user_id:String!
+  room_id:String!
+  join_time: String!
+  left_time: String
+}
+
+
+

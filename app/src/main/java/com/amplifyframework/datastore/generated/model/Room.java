@@ -17,16 +17,16 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
-/** This is an auto generated class representing the User type in your schema. */
+/** This is an auto generated class representing the Room type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "Users", type = Model.Type.USER, version = 1)
-public final class User implements Model {
-  public static final QueryField ID = field("User", "id");
-  public static final QueryField NAME = field("User", "name");
-  public static final QueryField INTRODUCTION = field("User", "introduction");
+@ModelConfig(pluralName = "Rooms", type = Model.Type.USER, version = 1)
+public final class Room implements Model {
+  public static final QueryField ID = field("Room", "id");
+  public static final QueryField NAME = field("Room", "name");
+  public static final QueryField LAST_MSG_TIME = field("Room", "last_msg_time");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
-  private final @ModelField(targetType="String") String introduction;
+  private final @ModelField(targetType="String", isRequired = true) String last_msg_time;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -43,8 +43,8 @@ public final class User implements Model {
       return name;
   }
   
-  public String getIntroduction() {
-      return introduction;
+  public String getLastMsgTime() {
+      return last_msg_time;
   }
   
   public Temporal.DateTime getCreatedAt() {
@@ -55,10 +55,10 @@ public final class User implements Model {
       return updatedAt;
   }
   
-  private User(String id, String name, String introduction) {
+  private Room(String id, String name, String last_msg_time) {
     this.id = id;
     this.name = name;
-    this.introduction = introduction;
+    this.last_msg_time = last_msg_time;
   }
   
   @Override
@@ -68,12 +68,12 @@ public final class User implements Model {
       } else if(obj == null || getClass() != obj.getClass()) {
         return false;
       } else {
-      User user = (User) obj;
-      return ObjectsCompat.equals(getId(), user.getId()) &&
-              ObjectsCompat.equals(getName(), user.getName()) &&
-              ObjectsCompat.equals(getIntroduction(), user.getIntroduction()) &&
-              ObjectsCompat.equals(getCreatedAt(), user.getCreatedAt()) &&
-              ObjectsCompat.equals(getUpdatedAt(), user.getUpdatedAt());
+      Room room = (Room) obj;
+      return ObjectsCompat.equals(getId(), room.getId()) &&
+              ObjectsCompat.equals(getName(), room.getName()) &&
+              ObjectsCompat.equals(getLastMsgTime(), room.getLastMsgTime()) &&
+              ObjectsCompat.equals(getCreatedAt(), room.getCreatedAt()) &&
+              ObjectsCompat.equals(getUpdatedAt(), room.getUpdatedAt());
       }
   }
   
@@ -82,7 +82,7 @@ public final class User implements Model {
     return new StringBuilder()
       .append(getId())
       .append(getName())
-      .append(getIntroduction())
+      .append(getLastMsgTime())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -92,10 +92,10 @@ public final class User implements Model {
   @Override
    public String toString() {
     return new StringBuilder()
-      .append("User {")
+      .append("Room {")
       .append("id=" + String.valueOf(getId()) + ", ")
       .append("name=" + String.valueOf(getName()) + ", ")
-      .append("introduction=" + String.valueOf(getIntroduction()) + ", ")
+      .append("last_msg_time=" + String.valueOf(getLastMsgTime()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
@@ -114,8 +114,8 @@ public final class User implements Model {
    * @param id the id of the existing item this instance will represent
    * @return an instance of this model with only ID populated
    */
-  public static User justId(String id) {
-    return new User(
+  public static Room justId(String id) {
+    return new Room(
       id,
       null,
       null
@@ -125,54 +125,59 @@ public final class User implements Model {
   public CopyOfBuilder copyOfBuilder() {
     return new CopyOfBuilder(id,
       name,
-      introduction);
+      last_msg_time);
   }
   public interface NameStep {
-    BuildStep name(String name);
+    LastMsgTimeStep name(String name);
+  }
+  
+
+  public interface LastMsgTimeStep {
+    BuildStep lastMsgTime(String lastMsgTime);
   }
   
 
   public interface BuildStep {
-    User build();
+    Room build();
     BuildStep id(String id);
-    BuildStep introduction(String introduction);
   }
   
 
-  public static class Builder implements NameStep, BuildStep {
+  public static class Builder implements NameStep, LastMsgTimeStep, BuildStep {
     private String id;
     private String name;
-    private String introduction;
+    private String last_msg_time;
     public Builder() {
       
     }
     
-    private Builder(String id, String name, String introduction) {
+    private Builder(String id, String name, String last_msg_time) {
       this.id = id;
       this.name = name;
-      this.introduction = introduction;
+      this.last_msg_time = last_msg_time;
     }
     
     @Override
-     public User build() {
+     public Room build() {
         String id = this.id != null ? this.id : UUID.randomUUID().toString();
         
-        return new User(
+        return new Room(
           id,
           name,
-          introduction);
+          last_msg_time);
     }
     
     @Override
-     public BuildStep name(String name) {
+     public LastMsgTimeStep name(String name) {
         Objects.requireNonNull(name);
         this.name = name;
         return this;
     }
     
     @Override
-     public BuildStep introduction(String introduction) {
-        this.introduction = introduction;
+     public BuildStep lastMsgTime(String lastMsgTime) {
+        Objects.requireNonNull(lastMsgTime);
+        this.last_msg_time = lastMsgTime;
         return this;
     }
     
@@ -188,9 +193,10 @@ public final class User implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String introduction) {
-      super(id, name, introduction);
+    private CopyOfBuilder(String id, String name, String lastMsgTime) {
+      super(id, name, last_msg_time);
       Objects.requireNonNull(name);
+      Objects.requireNonNull(last_msg_time);
     }
     
     @Override
@@ -199,15 +205,15 @@ public final class User implements Model {
     }
     
     @Override
-     public CopyOfBuilder introduction(String introduction) {
-      return (CopyOfBuilder) super.introduction(introduction);
+     public CopyOfBuilder lastMsgTime(String lastMsgTime) {
+      return (CopyOfBuilder) super.lastMsgTime(lastMsgTime);
     }
   }
   
 
-  public static class UserIdentifier extends ModelIdentifier<User> {
+  public static class RoomIdentifier extends ModelIdentifier<Room> {
     private static final long serialVersionUID = 1L;
-    public UserIdentifier(String id) {
+    public RoomIdentifier(String id) {
       super(id);
     }
   }

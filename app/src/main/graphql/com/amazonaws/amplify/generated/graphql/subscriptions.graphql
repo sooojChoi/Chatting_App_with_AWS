@@ -41,3 +41,93 @@ subscription OnDeleteUser($filter: ModelSubscriptionUserFilterInput) {
     __typename
   }
 }
+
+subscription OnCreateRoom($filter: ModelSubscriptionRoomFilterInput) {
+  onCreateRoom(filter: $filter) {
+    id
+    name
+    last_msg_time
+    createdAt
+    updatedAt
+    _version
+    _deleted
+    _lastChangedAt
+    __typename
+  }
+}
+
+subscription OnUpdateRoom($filter: ModelSubscriptionRoomFilterInput) {
+  onUpdateRoom(filter: $filter) {
+    id
+    name
+    last_msg_time
+    createdAt
+    updatedAt
+    _version
+    _deleted
+    _lastChangedAt
+    __typename
+  }
+}
+
+subscription OnDeleteRoom($filter: ModelSubscriptionRoomFilterInput) {
+  onDeleteRoom(filter: $filter) {
+    id
+    name
+    last_msg_time
+    createdAt
+    updatedAt
+    _version
+    _deleted
+    _lastChangedAt
+    __typename
+  }
+}
+
+subscription OnCreateGroup($filter: ModelSubscriptionGroupFilterInput) {
+  onCreateGroup(filter: $filter) {
+    id
+    user_id
+    room_id
+    join_time
+    left_time
+    createdAt
+    updatedAt
+    _version
+    _deleted
+    _lastChangedAt
+    __typename
+  }
+}
+
+subscription OnUpdateGroup($filter: ModelSubscriptionGroupFilterInput) {
+  onUpdateGroup(filter: $filter) {
+    id
+    user_id
+    room_id
+    join_time
+    left_time
+    createdAt
+    updatedAt
+    _version
+    _deleted
+    _lastChangedAt
+    __typename
+  }
+}
+
+subscription OnDeleteGroup($filter: ModelSubscriptionGroupFilterInput) {
+  onDeleteGroup(filter: $filter) {
+    id
+    user_id
+    room_id
+    join_time
+    left_time
+    createdAt
+    updatedAt
+    _version
+    _deleted
+    _lastChangedAt
+    __typename
+  }
+}

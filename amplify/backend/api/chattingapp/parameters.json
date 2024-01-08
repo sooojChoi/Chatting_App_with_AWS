@@ -1,5 +1,6 @@
 {
   "AppSyncApiName": "chattingapp",
   "DynamoDBBillingMode": "PAY_PER_REQUEST",
-  "DynamoDBEnableServerSideEncryption": false
+  "DynamoDBEnableServerSideEncryption": false,
+  "AuthModeLastUpdated": "2024-01-08T07:29:40.074Z"
 }

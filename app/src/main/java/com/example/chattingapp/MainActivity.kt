@@ -14,7 +14,11 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
+import androidx.navigation.ui.AppBarConfiguration
+import androidx.navigation.ui.navigateUp
+import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.aws.AWSApiPlugin
@@ -54,6 +58,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var myEmail:String
     private val viewModel: UserInfoViewModel by viewModels()
     lateinit var coroutineScope: CoroutineScope
+    private lateinit var appBarConfiguration: AppBarConfiguration
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,12 +68,18 @@ class MainActivity : AppCompatActivity() {
         // amplify pulgin추가, 초기화 작업
         initAmplify()
 
+        setSupportActionBar(findViewById(R.id.toolbar2))
 
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragment) as NavHostFragment
         val navController = navHostFragment.navController
         val bottomNavigationView = binding.bottomNav
         bottomNavigationView.setupWithNavController(navController)
+
+        //app bar와 navigation 연결
+      //  appBarConfiguration = AppBarConfiguration(navController.graph)
+      //  setupActionBarWithNavController(navController, appBarConfiguration)
+
 
         // Declare the launcher at the top of your Activity/Fragment:
         requestPermissionLauncher = registerForActivityResult(
@@ -80,6 +91,16 @@ class MainActivity : AppCompatActivity() {
                 // TODO: Inform user that that your app will not show notifications.
             }
         }
+
+
+
+    }
+
+    override fun onSupportNavigateUp(): Boolean {
+        val navController = findNavController(R.id.fragment)
+
+        return navController.navigateUp(appBarConfiguration)
+                || super.onSupportNavigateUp()
     }
 
     private fun sendCommand(@Suppress("SameParameterValue") command: String) {

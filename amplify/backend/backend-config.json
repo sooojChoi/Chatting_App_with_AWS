@@ -7,7 +7,9 @@
           "additionalAuthenticationProviders": [],
           "defaultAuthentication": {
             "apiKeyConfig": {
-              "apiKeyExpirationDays": 7
+              "apiKeyExpirationDate": "2025-01-07T07:29:34.127Z",
+              "apiKeyExpirationDays": 365,
+              "description": "DynamoDBAPIKey"
             },
             "authenticationType": "API_KEY"
           }
