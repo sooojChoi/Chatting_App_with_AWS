@@ -59,6 +59,9 @@ mutation CreateRoom(
     id
     name
     last_msg_time
+    last_msg
+    last_msg_sender
+    members
     createdAt
     updatedAt
     _version
@@ -76,6 +79,9 @@ mutation UpdateRoom(
     id
     name
     last_msg_time
+    last_msg
+    last_msg_sender
+    members
     createdAt
     updatedAt
     _version
@@ -93,6 +99,9 @@ mutation DeleteRoom(
     id
     name
     last_msg_time
+    last_msg
+    last_msg_sender
+    members
     createdAt
     updatedAt
     _version

@@ -9,6 +9,7 @@ import com.example.chattingapp.ui.login.UserInfoViewModel
 
 data class checkboxData(
     var id: String,
+    var name:String,
     var checked: Boolean)
 
 class UserListWithCheckAdapter(private val viewModel: UserInfoViewModel): RecyclerView.Adapter<UserListWithCheckAdapter.ViewHolder>() {
@@ -21,14 +22,14 @@ class UserListWithCheckAdapter(private val viewModel: UserInfoViewModel): Recycl
             binding.nameTextView.text = user?.name
             binding.introTextView.text = user?.introduction
 
-            binding.root.setOnClickListener {
-                // itemClickEvent 옵저버에게 항목 번호화 클릭되었음을 알림
-                viewModel.itemClickEvent.value = pos
-            }
+//            binding.root.setOnClickListener {
+//                // itemClickEvent 옵저버에게 항목 번호화 클릭되었음을 알림
+//                viewModel.itemClickEvent.value = pos
+//            }
 
             // 새로운 아이템이면 checkBoxList에 추가한다.
             if(pos >= checkboxList.size)
-                checkboxList.add(pos, checkboxData(user?.email ?: "null", false))
+                checkboxList.add(pos, checkboxData(user?.email ?: "null", user?.name ?: "null",false))
 
 
             // 현재 체크박스리스트에 따라 체크박스 유무를 표시한다.

@@ -47,6 +47,9 @@ subscription OnCreateRoom($filter: ModelSubscriptionRoomFilterInput) {
     id
     name
     last_msg_time
+    last_msg
+    last_msg_sender
+    members
     createdAt
     updatedAt
     _version
@@ -61,6 +64,9 @@ subscription OnUpdateRoom($filter: ModelSubscriptionRoomFilterInput) {
     id
     name
     last_msg_time
+    last_msg
+    last_msg_sender
+    members
     createdAt
     updatedAt
     _version
@@ -75,6 +81,9 @@ subscription OnDeleteRoom($filter: ModelSubscriptionRoomFilterInput) {
     id
     name
     last_msg_time
+    last_msg
+    last_msg_sender
+    members
     createdAt
     updatedAt
     _version

@@ -18,7 +18,6 @@ import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.aws.AWSApiPlugin
@@ -31,6 +30,7 @@ import com.amplifyframework.core.model.query.ObserveQueryOptions
 import com.amplifyframework.core.model.query.QuerySortBy
 import com.amplifyframework.core.model.query.QuerySortOrder
 import com.amplifyframework.core.model.query.Where
+import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
 import com.example.chattingapp.databinding.ActivityMainBinding
 import com.example.chattingapp.ui.login.SignUpActivity
@@ -42,12 +42,15 @@ import com.amplifyframework.datastore.AWSDataStorePlugin
 import com.amplifyframework.datastore.DataStoreConfiguration
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.DataStoreQuerySnapshot
+import com.amplifyframework.datastore.generated.model.Group
+import com.amplifyframework.datastore.generated.model.Room
 import com.amplifyframework.datastore.generated.model.User
+import com.example.chattingapp.ui.RoomListAdapter
+import com.example.chattingapp.ui.RoomViewModel
 import com.example.chattingapp.ui.login.UserInfoViewModel
 import com.example.chattingapp.ui.login.UserModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 
 class MainActivity : AppCompatActivity() {
@@ -56,7 +59,8 @@ class MainActivity : AppCompatActivity() {
     private var lineNumber = 0
     lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
     private lateinit var myEmail:String
-    private val viewModel: UserInfoViewModel by viewModels()
+    private val userViewModel: UserInfoViewModel by viewModels()
+    private val roomViewModel: RoomViewModel by viewModels()
     lateinit var coroutineScope: CoroutineScope
     private lateinit var appBarConfiguration: AppBarConfiguration
 
@@ -179,14 +183,13 @@ class MainActivity : AppCompatActivity() {
             Amplify.addPlugin(AWSDataStorePlugin.builder().dataStoreConfiguration(
                 DataStoreConfiguration.builder()
                     .syncExpression(User::class.java){ QueryPredicates.all()}
+                    .syncExpression(Room::class.java){ QueryPredicates.all()}
+                    .syncExpression(Group::class.java){ QueryPredicates.all()}
                     .build())
                 .build())
 
             Amplify.addPlugin(AWSCognitoAuthPlugin())
-            Amplify.configure(applicationContext).apply {
-                
-                Log.i("amplify datastore","설정 완료?")
-            }
+            Amplify.configure(applicationContext)
 
 
             Log.i("chattingApp", "Initialized Amplify")
@@ -224,6 +227,7 @@ class MainActivity : AppCompatActivity() {
 
         // local store에 대한 observe 등록
         getUserInfoFromDynamoDB()
+        getRoomFromDynamoDB()
 
     }
 
@@ -240,14 +244,21 @@ class MainActivity : AppCompatActivity() {
                 val userArray = ArrayList<UserModel>()
                 value.items.forEach {
                     if(it.id.equals(myEmail)){
-                        viewModel.emailLiveData.postValue(it.id)
-                        viewModel.userNameLiveData.postValue(it.name)
-                        viewModel.introductionLiveData.postValue(it.introduction)
+                        userViewModel.emailLiveData.postValue(it.id)
+                        userViewModel.userNameLiveData.postValue(it.name)
+                        userViewModel.introductionLiveData.postValue(it.introduction)
+//                        // 디바이스에 이름을 저장한다.
+//                        val shared = getSharedPreferences("userInfo", Context.MODE_PRIVATE)
+//                        val editor = shared?.edit()
+//                        editor?.putString("name",it.name)
+//                        editor?.apply()
+
+                        RoomListAdapter.myName = it.name
                     }else{
                         userArray.add(UserModel(it.id, it.name, it.introduction))
                     }
                 }
-                viewModel.otherUsersLiveData.postValue(userArray)
+                userViewModel.otherUsersLiveData.postValue(userArray)
               //  viewModel.otherUsersLiveData.value = userArray
             }
 
@@ -279,6 +290,37 @@ class MainActivity : AppCompatActivity() {
         //changeSync()
     }
 
+    fun getRoomFromDynamoDB(){
+        // room 정보는 observe하지 않고 query를 통해 가져온다.
+        // room 정보가 바뀌는 것은 새 메세지가 올 때마다 바뀌기 때문에 빈번하게 일어난다.
+        // websocket으로부터 메시지가 올 때마다 바뀌도록 한다.
+        val roomArray = arrayListOf<Room>()
+        Amplify.DataStore.query(Group::class.java,
+            Where.matches(Group.USER_ID.eq(userViewModel.emailLiveData.value)),
+            { myGroups ->
+                while (myGroups.hasNext()) {
+                    val group = myGroups.next()
+                    Amplify.DataStore.query(Room::class.java,
+                        Where.matches(Room.ID.eq(group.roomId))
+                            .sorted(Room.LAST_MSG_TIME.descending()),
+                        { rooms ->
+                            while (rooms.hasNext()) {
+                                val room = rooms.next()
+                                roomArray.add(room)
+                                Log.i("MyAmplifyApp", "Title: ${room.id}")
+                            }
+                            //viewModel에 데이터 추가!
+                            roomViewModel.roomLiveData.postValue(roomArray)
+                        },
+                        { Log.e("MyAmplifyApp", "Query failed", it) }
+                    )
+
+                }
+            },
+            { Log.e("MyAmplifyApp", "Query failed", it) }
+        )
+    }
+
     fun changeSync(){
         //local store의 데이터를 지우고 다시 cloud data와 sync 한다.
         // 이때 syncExpression 조건을 변경하고 sync할 수 있다.
@@ -298,8 +340,5 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    fun startEditSimpleProfileActivity() {
-
-    }
 
 }

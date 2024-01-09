@@ -18,10 +18,9 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.amplifyframework.core.Amplify
+import com.amplifyframework.datastore.generated.model.Group
 import com.amplifyframework.datastore.generated.model.Room
-import com.amplifyframework.datastore.generated.model.User
 import com.example.chattingapp.R
-import com.example.chattingapp.databinding.EditIntroductionDialogBinding
 import com.example.chattingapp.databinding.FragmentRoomListBinding
 import com.example.chattingapp.databinding.SelectFriendDialogBinding
 import com.example.chattingapp.ui.login.UserInfoViewModel
@@ -37,8 +36,8 @@ import java.lang.IllegalStateException
  * create an instance of this fragment.
  */
 class RoomListFragment : Fragment() {
-    private val viewModel: UserInfoViewModel by activityViewModels()
-
+    private val userViewModel: UserInfoViewModel by activityViewModels()
+    private val roomViewModel: RoomViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,6 +87,14 @@ class RoomListFragment : Fragment() {
         val binding = FragmentRoomListBinding.bind(view)
 
 
+        // 방이 추가되면 화면에 업데이트
+        roomViewModel.roomLiveData.observe(viewLifecycleOwner){
+            val adapter = RoomListAdapter(roomViewModel)
+            binding.roomRecyclerView.adapter = adapter
+            binding.roomRecyclerView.layoutManager = LinearLayoutManager(context)
+            binding.roomRecyclerView.setHasFixedSize(true)
+        }
+
     }
 }
 
@@ -95,7 +102,8 @@ class RoomListFragment : Fragment() {
 
 class SelectFriendDialog: DialogFragment(){
     val binding by lazy { SelectFriendDialogBinding.inflate(layoutInflater) }
-    private val viewModel: UserInfoViewModel by activityViewModels()
+    private val userViewModel: UserInfoViewModel by activityViewModels()
+    private val roomViewModel: RoomViewModel by activityViewModels()
     lateinit var coroutineScope: CoroutineScope
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -105,7 +113,7 @@ class SelectFriendDialog: DialogFragment(){
             val builder = AlertDialog.Builder(it)
 
             // binding 으로 view 초기화
-            val adapter = UserListWithCheckAdapter(viewModel)
+            val adapter = UserListWithCheckAdapter(userViewModel)
             binding.recyclerViewUser.adapter = adapter
             binding.recyclerViewUser.layoutManager = LinearLayoutManager(context)
             binding.recyclerViewUser.setHasFixedSize(true)
@@ -118,30 +126,61 @@ class SelectFriendDialog: DialogFragment(){
                     coroutineScope.launch {
                         // 선택된 user id 목록
                         val checkedUserList = arrayListOf<String>()
-                        //var roomName:String =""
+                        var members:String =""
                         UserListWithCheckAdapter.checkboxList.forEach {
                             if(it.checked){
                                 checkedUserList.add(it.id)
+                                members+="${it.name}\n"
                             }
                         }
+                        members+=userViewModel.userNameLiveData.value
                         // dialog를 다시 열었을 때 체크 표시 초기화 되어있도록.
                         UserListWithCheckAdapter.checkboxList.clear()
 
                         if(checkedUserList.size==0){
                             dialog.cancel()
                         }else{
-//                            // Room table에 항목 추가
-//                            val item = User.builder().name(name).id(email).introduction(introduction).build()
-//                            val roomItem = Room.builder().name(viewModel.emailLiveData.value)
-//                                .lastMsgTime()
-//                            try{
-//                                Amplify.DataStore.save(item,
-//                                    { Log.i("MyAmplifyApp", "Created a new post successfully") },
-//                                    { Log.e("MyAmplifyApp", "Error creating post", it) }
-//                                )
-//                            }catch (e: Exception){
-//                                Log.i("MyAmplifyApp","error: $e")
-//                            }
+                            val currentTime = System.currentTimeMillis().toString()
+                            // Room table에 항목 추가
+                            val roomItem = Room.builder().name(userViewModel.emailLiveData.value)
+                                .lastMsgTime(currentTime).members(members).build()
+                            try{
+                                Amplify.DataStore.save(roomItem,
+                                    {
+                                        Log.i("MyAmplifyApp", "Created a new room successfully")
+                                        //view model에도 추가
+                                        val room_arr = roomViewModel.roomLiveData.value
+                                        room_arr?.add(it.item())
+
+                                        roomViewModel.roomLiveData.postValue(room_arr)
+
+                                        // 방이 성공적으로 만들어졌으면 group도 생성
+                                        var groupItem = Group.builder().userId(userViewModel.emailLiveData.value)
+                                            .roomId(it.item().id).joinTime(currentTime).build()
+                                        Amplify.DataStore.save(groupItem,
+                                            {
+                                                Log.i("MyAmplifyApp", "Created a new group item successfully")
+                                            },
+                                            {
+                                                Log.e("MyAmplifyApp", "Error creating a group item", it)
+                                            })
+                                        checkedUserList.forEach {
+                                            groupItem = Group.builder().userId(it)
+                                                .roomId(roomItem.id).joinTime(currentTime).build()
+                                            Amplify.DataStore.save(groupItem,
+                                                {
+                                                    Log.i("MyAmplifyApp", "Created a new group item successfully")
+                                                },
+                                                {
+                                                    Log.e("MyAmplifyApp", "Error creating a group item", it)
+                                                })
+                                        }
+                                    },
+                                    { Log.e("MyAmplifyApp", "Error creating a room", it) }
+                                )
+                            }catch (e: Exception){
+                                Log.i("MyAmplifyApp","error: $e")
+                            }
 
                         }
 
