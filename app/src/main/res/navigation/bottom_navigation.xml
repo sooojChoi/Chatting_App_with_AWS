@@ -9,15 +9,30 @@
         android:id="@+id/homeFragment"
         android:name="com.example.chattingapp.ui.HomeFragment"
         android:label="fragment_home"
+        app:popUpToSaveState="true"
         tools:layout="@layout/fragment_home" />
     <fragment
         android:id="@+id/roomListFragment"
         android:name="com.example.chattingapp.ui.RoomListFragment"
         android:label="fragment_room_list"
-        tools:layout="@layout/fragment_room_list" />
+        app:popUpToSaveState="true"
+        tools:layout="@layout/fragment_room_list">
+
+        <action
+            android:id="@+id/action_roomListFragment_to_chattingFragment"
+            app:destination="@id/chattingFragment" />
+    </fragment>
     <fragment
         android:id="@+id/lastPageFragment"
         android:name="com.example.chattingapp.ui.LastPageFragment"
         android:label="fragment_last_page"
+        app:popUpToSaveState="true"
         tools:layout="@layout/fragment_last_page" />
+    <fragment
+        android:id="@+id/chattingFragment"
+        android:name="com.example.chattingapp.ui.ChattingFragment"
+        android:label="fragment_chatting"
+
+        tools:layout="@layout/fragment_chatting" />
+
 </navigation>

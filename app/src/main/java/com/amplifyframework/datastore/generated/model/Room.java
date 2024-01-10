@@ -26,13 +26,11 @@ public final class Room implements Model {
   public static final QueryField LAST_MSG_TIME = field("Room", "last_msg_time");
   public static final QueryField LAST_MSG = field("Room", "last_msg");
   public static final QueryField LAST_MSG_SENDER = field("Room", "last_msg_sender");
-  public static final QueryField MEMBERS = field("Room", "members");
   private final @ModelField(targetType="ID", isRequired = true) String id;
   private final @ModelField(targetType="String", isRequired = true) String name;
   private final @ModelField(targetType="String", isRequired = true) String last_msg_time;
   private final @ModelField(targetType="String") String last_msg;
   private final @ModelField(targetType="String") String last_msg_sender;
-  private final @ModelField(targetType="String", isRequired = true) String members;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime createdAt;
   private @ModelField(targetType="AWSDateTime", isReadOnly = true) Temporal.DateTime updatedAt;
   /** @deprecated This API is internal to Amplify and should not be used. */
@@ -61,10 +59,6 @@ public final class Room implements Model {
       return last_msg_sender;
   }
   
-  public String getMembers() {
-      return members;
-  }
-  
   public Temporal.DateTime getCreatedAt() {
       return createdAt;
   }
@@ -73,13 +67,12 @@ public final class Room implements Model {
       return updatedAt;
   }
   
-  private Room(String id, String name, String last_msg_time, String last_msg, String last_msg_sender, String members) {
+  private Room(String id, String name, String last_msg_time, String last_msg, String last_msg_sender) {
     this.id = id;
     this.name = name;
     this.last_msg_time = last_msg_time;
     this.last_msg = last_msg;
     this.last_msg_sender = last_msg_sender;
-    this.members = members;
   }
   
   @Override
@@ -95,7 +88,6 @@ public final class Room implements Model {
               ObjectsCompat.equals(getLastMsgTime(), room.getLastMsgTime()) &&
               ObjectsCompat.equals(getLastMsg(), room.getLastMsg()) &&
               ObjectsCompat.equals(getLastMsgSender(), room.getLastMsgSender()) &&
-              ObjectsCompat.equals(getMembers(), room.getMembers()) &&
               ObjectsCompat.equals(getCreatedAt(), room.getCreatedAt()) &&
               ObjectsCompat.equals(getUpdatedAt(), room.getUpdatedAt());
       }
@@ -109,7 +101,6 @@ public final class Room implements Model {
       .append(getLastMsgTime())
       .append(getLastMsg())
       .append(getLastMsgSender())
-      .append(getMembers())
       .append(getCreatedAt())
       .append(getUpdatedAt())
       .toString()
@@ -125,7 +116,6 @@ public final class Room implements Model {
       .append("last_msg_time=" + String.valueOf(getLastMsgTime()) + ", ")
       .append("last_msg=" + String.valueOf(getLastMsg()) + ", ")
       .append("last_msg_sender=" + String.valueOf(getLastMsgSender()) + ", ")
-      .append("members=" + String.valueOf(getMembers()) + ", ")
       .append("createdAt=" + String.valueOf(getCreatedAt()) + ", ")
       .append("updatedAt=" + String.valueOf(getUpdatedAt()))
       .append("}")
@@ -150,7 +140,6 @@ public final class Room implements Model {
       null,
       null,
       null,
-      null,
       null
     );
   }
@@ -160,8 +149,7 @@ public final class Room implements Model {
       name,
       last_msg_time,
       last_msg,
-      last_msg_sender,
-      members);
+      last_msg_sender);
   }
   public interface NameStep {
     LastMsgTimeStep name(String name);
@@ -169,12 +157,7 @@ public final class Room implements Model {
   
 
   public interface LastMsgTimeStep {
-    MembersStep lastMsgTime(String lastMsgTime);
-  }
-  
-
-  public interface MembersStep {
-    BuildStep members(String members);
+    BuildStep lastMsgTime(String lastMsgTime);
   }
   
 
@@ -186,24 +169,22 @@ public final class Room implements Model {
   }
   
 
-  public static class Builder implements NameStep, LastMsgTimeStep, MembersStep, BuildStep {
+  public static class Builder implements NameStep, LastMsgTimeStep, BuildStep {
     private String id;
     private String name;
     private String last_msg_time;
-    private String members;
     private String last_msg;
     private String last_msg_sender;
     public Builder() {
       
     }
     
-    private Builder(String id, String name, String last_msg_time, String last_msg, String last_msg_sender, String members) {
+    private Builder(String id, String name, String last_msg_time, String last_msg, String last_msg_sender) {
       this.id = id;
       this.name = name;
       this.last_msg_time = last_msg_time;
       this.last_msg = last_msg;
       this.last_msg_sender = last_msg_sender;
-      this.members = members;
     }
     
     @Override
@@ -215,8 +196,7 @@ public final class Room implements Model {
           name,
           last_msg_time,
           last_msg,
-          last_msg_sender,
-          members);
+          last_msg_sender);
     }
     
     @Override
@@ -227,16 +207,9 @@ public final class Room implements Model {
     }
     
     @Override
-     public MembersStep lastMsgTime(String lastMsgTime) {
+     public BuildStep lastMsgTime(String lastMsgTime) {
         Objects.requireNonNull(lastMsgTime);
         this.last_msg_time = lastMsgTime;
-        return this;
-    }
-    
-    @Override
-     public BuildStep members(String members) {
-        Objects.requireNonNull(members);
-        this.members = members;
         return this;
     }
     
@@ -264,11 +237,10 @@ public final class Room implements Model {
   
 
   public final class CopyOfBuilder extends Builder {
-    private CopyOfBuilder(String id, String name, String lastMsgTime, String lastMsg, String lastMsgSender, String members) {
-      super(id, name, last_msg_time, last_msg, last_msg_sender, members);
+    private CopyOfBuilder(String id, String name, String lastMsgTime, String lastMsg, String lastMsgSender) {
+      super(id, name, last_msg_time, last_msg, last_msg_sender);
       Objects.requireNonNull(name);
       Objects.requireNonNull(last_msg_time);
-      Objects.requireNonNull(members);
     }
     
     @Override
@@ -279,11 +251,6 @@ public final class Room implements Model {
     @Override
      public CopyOfBuilder lastMsgTime(String lastMsgTime) {
       return (CopyOfBuilder) super.lastMsgTime(lastMsgTime);
-    }
-    
-    @Override
-     public CopyOfBuilder members(String members) {
-      return (CopyOfBuilder) super.members(members);
     }
     
     @Override

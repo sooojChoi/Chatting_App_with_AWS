@@ -17,7 +17,7 @@ class RoomListAdapter(private val viewModel: RoomViewModel): RecyclerView.Adapte
             val room = viewModel.roomLiveData.value?.get(pos)
 
             // 방 이름 구하기 (멤버들 이름으로 구성됨)
-            val members = room?.members?.split("\n")
+            val members = room?.name?.split("\n")
             var room_name=""
             var check = 0
             if (members != null) {
@@ -27,14 +27,15 @@ class RoomListAdapter(private val viewModel: RoomViewModel): RecyclerView.Adapte
                     if(name.equals(myName) && check==0){
                         check=1
                     }else{
-                        if(i!=members.size-1){
-                            room_name+="${name}, "
-                            if(members.size==2){
-                                room_name=name
-                            }
-                        }else{
-                            room_name+= name
+                        // 마지막 순서이거나, 나보다 하나 남았는데 그게 내 이름일 때
+                        if(i==members.size-1 ||(i==members.size-2 &&check==0)){
+                            room_name+=name
                         }
+                        // 일반적인 순서일 때
+                        else{
+                            room_name+="${name}, "
+                        }
+
                     }
                 }
             }
@@ -44,12 +45,14 @@ class RoomListAdapter(private val viewModel: RoomViewModel): RecyclerView.Adapte
             val time = dataFormat.format(room?.lastMsgTime?.toLong())
 
             binding.RoomNameTextView.text = room_name
-            binding.MsgTextView.text = room?.lastMsg ?: ""
+            binding.MsgTextView.text = room?.lastMsg ?: "대화를 시작해보세요!"
             binding.msgTimeTextView.text = time
 
             binding.root.setOnClickListener {
                 // itemClickEvent 옵저버에게 항목 번호화 클릭되었음을 알림
                 viewModel.itemClickEvent.value = pos
+                // 클릭된 방의 id를 넘겨줌.
+                viewModel.currentRoomId.value = room?.id
             }
         }
     }

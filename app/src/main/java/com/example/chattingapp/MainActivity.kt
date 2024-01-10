@@ -18,6 +18,7 @@ import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
+import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.aws.AWSApiPlugin
@@ -45,12 +46,16 @@ import com.amplifyframework.datastore.DataStoreQuerySnapshot
 import com.amplifyframework.datastore.generated.model.Group
 import com.amplifyframework.datastore.generated.model.Room
 import com.amplifyframework.datastore.generated.model.User
+import com.example.chattingapp.ui.MessageListAdapter
 import com.example.chattingapp.ui.RoomListAdapter
 import com.example.chattingapp.ui.RoomViewModel
 import com.example.chattingapp.ui.login.UserInfoViewModel
 import com.example.chattingapp.ui.login.UserModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 class MainActivity : AppCompatActivity() {
@@ -77,12 +82,13 @@ class MainActivity : AppCompatActivity() {
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragment) as NavHostFragment
         val navController = navHostFragment.navController
+
         val bottomNavigationView = binding.bottomNav
         bottomNavigationView.setupWithNavController(navController)
 
         //app bar와 navigation 연결
-      //  appBarConfiguration = AppBarConfiguration(navController.graph)
-      //  setupActionBarWithNavController(navController, appBarConfiguration)
+    //    appBarConfiguration = AppBarConfiguration(navController.graph)
+  //      setupActionBarWithNavController(navController, appBarConfiguration)
 
 
         // Declare the launcher at the top of your Activity/Fragment:
@@ -117,7 +123,8 @@ class MainActivity : AppCompatActivity() {
             .toString())
         // 메시지 보낸 것을 화면 상의 텍스트뷰에 나타냄.
         Log.i(TAG,"데이터 전송")
-        appendStatus(getString(R.string.websocket_sent_command, command))
+
+
 
 
     }
@@ -133,10 +140,6 @@ class MainActivity : AppCompatActivity() {
         ws = OkHttpClient().newWebSocket(request, HttpWebSocket().listener)
     }
 
-    private fun appendStatus(message: String) {
-//        binding.status.append(getString(R.string.status_line, lineNumber, message))
-//        lineNumber++
-    }
 
     fun goToSignUpActivity(){
         startActivity(Intent(this, SignUpActivity::class.java))
@@ -212,7 +215,11 @@ class MainActivity : AppCompatActivity() {
                     Log.i(TAG,"SharedPreferences: my email: $myEmail")
                     // 소켓을 생성.
                     if(myEmail.contains('@')){
-                       // setupWebSocket()
+                        setupWebSocket()
+                        // local store에 대한 observe 등록
+                        getUserInfoFromDynamoDB()
+                        getRoomFromDynamoDB()
+
                     }else{
                         runOnUiThread {
                             Toast.makeText(this,"서버에 연결할 수 없습니다.", Toast.LENGTH_SHORT).show()
@@ -225,9 +232,7 @@ class MainActivity : AppCompatActivity() {
             { error -> Log.e("AmplifyQuickstart", "Failed to fetch auth session", error) }
         )
 
-        // local store에 대한 observe 등록
-        getUserInfoFromDynamoDB()
-        getRoomFromDynamoDB()
+
 
     }
 
@@ -254,6 +259,7 @@ class MainActivity : AppCompatActivity() {
 //                        editor?.apply()
 
                         RoomListAdapter.myName = it.name
+                        MessageListAdapter.myEmail = it.id
                     }else{
                         userArray.add(UserModel(it.id, it.name, it.introduction))
                     }
@@ -294,31 +300,52 @@ class MainActivity : AppCompatActivity() {
         // room 정보는 observe하지 않고 query를 통해 가져온다.
         // room 정보가 바뀌는 것은 새 메세지가 올 때마다 바뀌기 때문에 빈번하게 일어난다.
         // websocket으로부터 메시지가 올 때마다 바뀌도록 한다.
-        val roomArray = arrayListOf<Room>()
+        val roomArray = ArrayList<Room>()
         Amplify.DataStore.query(Group::class.java,
-            Where.matches(Group.USER_ID.eq(userViewModel.emailLiveData.value)),
+            Where.matches(Group.USER_ID.eq(myEmail)),
             { myGroups ->
                 while (myGroups.hasNext()) {
+                    Log.i("room livedata test", "일치하는 group 있음")
                     val group = myGroups.next()
                     Amplify.DataStore.query(Room::class.java,
                         Where.matches(Room.ID.eq(group.roomId))
                             .sorted(Room.LAST_MSG_TIME.descending()),
                         { rooms ->
                             while (rooms.hasNext()) {
+                                Log.i("room livedata test", "일치하는 room 있음")
                                 val room = rooms.next()
                                 roomArray.add(room)
-                                Log.i("MyAmplifyApp", "Title: ${room.id}")
+                                Log.i("room livedata test","roomArray size: ${roomArray.size}")
+
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    roomViewModel.roomLiveData.postValue(roomArray)
+                                    if(roomViewModel.roomLiveData.value==null){
+                                        Log.i("room livedata test","room is null")
+                                    }else if(roomViewModel.roomLiveData.value!!.size==0){
+                                        Log.i("room livedata test","room size is 0.")
+                                    }else{
+                                        roomViewModel.roomLiveData.value!!.forEach {
+                                            Log.i("room livedata test","room id is ${it.id}.")
+                                        }
+                                    }
+                                }
+
+
+                                Log.i("room livedata test", "Title: ${room.id}")
+
                             }
-                            //viewModel에 데이터 추가!
-                            roomViewModel.roomLiveData.postValue(roomArray)
+
                         },
-                        { Log.e("MyAmplifyApp", "Query failed", it) }
+                        { Log.e("room livedata test", "Query failed", it) }
                     )
 
                 }
+
+                Log.i("room livedata test","room에 데이터 추가")
             },
-            { Log.e("MyAmplifyApp", "Query failed", it) }
+            { Log.e("room livedata test", "Query failed", it) }
         )
+
     }
 
     fun changeSync(){
@@ -340,5 +367,9 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
+    // room list fragment에서 chatting fragment로 이동
+    fun fromRoomFragToChatFrag(){
+
+    }
 
 }

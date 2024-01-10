@@ -14,7 +14,6 @@ type Room @model {
   last_msg_time: String!
   last_msg: String
   last_msg_sender:String
-  members: String!
 }
 
 type Group @model{
@@ -24,6 +23,17 @@ type Group @model{
   join_time: String!
   left_time: String
 }
+
+type Message @model{
+  id: ID!
+  from_id: String!
+  from_name: String
+  text: String!
+  datetime: String!
+  room_id: String!
+  type:String!
+}
+
 
 
 

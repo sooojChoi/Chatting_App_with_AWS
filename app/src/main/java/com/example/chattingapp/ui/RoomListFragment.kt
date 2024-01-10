@@ -16,6 +16,8 @@ import androidx.core.view.MenuProvider
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.Group
@@ -30,11 +32,7 @@ import kotlinx.coroutines.launch
 import java.lang.IllegalStateException
 
 
-/**
- * A simple [Fragment] subclass.
- * Use the [RoomListFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
+
 class RoomListFragment : Fragment() {
     private val userViewModel: UserInfoViewModel by activityViewModels()
     private val roomViewModel: RoomViewModel by activityViewModels()
@@ -95,6 +93,17 @@ class RoomListFragment : Fragment() {
             binding.roomRecyclerView.setHasFixedSize(true)
         }
 
+//        // 방 항목이 클릭되면, 채팅 fragment 띄우기.
+        roomViewModel.itemClickEvent.observe(viewLifecycleOwner){
+            Log.i("roomlistfragment","chatting fragment로 이동, $it")
+            if(it!=-1){
+                // 처음에 화면을 초기화할 때 and 채팅 fragment에서 뒤로가기 해서 올 때를 제외하고
+                // 방이 정말 선택되었을 때만 이동할 수 있도록.
+                findNavController().navigate(R.id.action_roomListFragment_to_chattingFragment)
+                roomViewModel.itemClickEvent.value=-1
+            }
+        }
+
     }
 }
 
@@ -103,7 +112,7 @@ class RoomListFragment : Fragment() {
 class SelectFriendDialog: DialogFragment(){
     val binding by lazy { SelectFriendDialogBinding.inflate(layoutInflater) }
     private val userViewModel: UserInfoViewModel by activityViewModels()
-    private val roomViewModel: RoomViewModel by activityViewModels()
+   // private val roomViewModel: RoomViewModel by activityViewModels<RoomViewModel>()
     lateinit var coroutineScope: CoroutineScope
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -117,6 +126,8 @@ class SelectFriendDialog: DialogFragment(){
             binding.recyclerViewUser.adapter = adapter
             binding.recyclerViewUser.layoutManager = LinearLayoutManager(context)
             binding.recyclerViewUser.setHasFixedSize(true)
+
+            val roomViewModel = ViewModelProvider(requireActivity()).get(RoomViewModel::class.java)
 
 
             builder.setView(binding.root)
@@ -142,17 +153,18 @@ class SelectFriendDialog: DialogFragment(){
                         }else{
                             val currentTime = System.currentTimeMillis().toString()
                             // Room table에 항목 추가
-                            val roomItem = Room.builder().name(userViewModel.emailLiveData.value)
-                                .lastMsgTime(currentTime).members(members).build()
+                            val roomItem = Room.builder().name(members)
+                                .lastMsgTime(currentTime).build()
                             try{
                                 Amplify.DataStore.save(roomItem,
                                     {
                                         Log.i("MyAmplifyApp", "Created a new room successfully")
                                         //view model에도 추가
-                                        val room_arr = roomViewModel.roomLiveData.value
-                                        room_arr?.add(it.item())
+                                        val room_arr = roomViewModel.roomLiveData.value ?: arrayListOf()
+                                        room_arr.add(it.item())
 
                                         roomViewModel.roomLiveData.postValue(room_arr)
+                                      //  roomViewModel.currentRoomId.postValue(it.item().id)
 
                                         // 방이 성공적으로 만들어졌으면 group도 생성
                                         var groupItem = Group.builder().userId(userViewModel.emailLiveData.value)

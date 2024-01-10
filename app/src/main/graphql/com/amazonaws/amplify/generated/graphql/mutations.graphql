@@ -61,7 +61,6 @@ mutation CreateRoom(
     last_msg_time
     last_msg
     last_msg_sender
-    members
     createdAt
     updatedAt
     _version
@@ -81,7 +80,6 @@ mutation UpdateRoom(
     last_msg_time
     last_msg
     last_msg_sender
-    members
     createdAt
     updatedAt
     _version
@@ -101,7 +99,6 @@ mutation DeleteRoom(
     last_msg_time
     last_msg
     last_msg_sender
-    members
     createdAt
     updatedAt
     _version
@@ -159,6 +156,69 @@ mutation DeleteGroup(
     room_id
     join_time
     left_time
+    createdAt
+    updatedAt
+    _version
+    _deleted
+    _lastChangedAt
+    __typename
+  }
+}
+
+mutation CreateMessage(
+  $input: CreateMessageInput!
+  $condition: ModelMessageConditionInput
+) {
+  createMessage(input: $input, condition: $condition) {
+    id
+    from_id
+    from_name
+    text
+    datetime
+    room_id
+    type
+    createdAt
+    updatedAt
+    _version
+    _deleted
+    _lastChangedAt
+    __typename
+  }
+}
+
+mutation UpdateMessage(
+  $input: UpdateMessageInput!
+  $condition: ModelMessageConditionInput
+) {
+  updateMessage(input: $input, condition: $condition) {
+    id
+    from_id
+    from_name
+    text
+    datetime
+    room_id
+    type
+    createdAt
+    updatedAt
+    _version
+    _deleted
+    _lastChangedAt
+    __typename
+  }
+}
+
+mutation DeleteMessage(
+  $input: DeleteMessageInput!
+  $condition: ModelMessageConditionInput
+) {
+  deleteMessage(input: $input, condition: $condition) {
+    id
+    from_id
+    from_name
+    text
+    datetime
+    room_id
+    type
     createdAt
     updatedAt
     _version
