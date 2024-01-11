@@ -3,6 +3,7 @@ package com.example.chattingapp.ui
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.amplifyframework.datastore.generated.model.Message
 import com.example.chattingapp.databinding.MessageMyItemBinding
 import com.example.chattingapp.databinding.MessageYourItemBinding
 import java.text.SimpleDateFormat
@@ -10,7 +11,7 @@ import java.text.SimpleDateFormat
 
 class YourChatViewHolder(val binding: MessageYourItemBinding) : RecyclerView.ViewHolder(binding.root)
 class MyChatViewHolder(val binding: MessageMyItemBinding) :  RecyclerView.ViewHolder(binding.root)
-class MessageListAdapter(private val viewModel: MessageViewModel): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class MessageListAdapter(private val messageList: ArrayList<Message>): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     companion object {
         var myEmail=""
     }
@@ -39,7 +40,7 @@ class MessageListAdapter(private val viewModel: MessageViewModel): RecyclerView.
     }
 
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-        val msg = viewModel.msgLiveData.value?.get(position)
+        val msg = messageList.get(position)
         when(holder){
             is MyChatViewHolder -> {
                 holder.binding.myMsgTextView.text = msg?.text ?: ""
@@ -58,7 +59,7 @@ class MessageListAdapter(private val viewModel: MessageViewModel): RecyclerView.
     }
 
     override fun getItemViewType(position: Int): Int {
-        val msg = viewModel.msgLiveData.value?.get(position)
+        val msg = messageList.get(position)
         // 내가 보낸 메시지
         return if(msg?.fromId == myEmail){
             if(msg.type == "text"){
@@ -78,7 +79,7 @@ class MessageListAdapter(private val viewModel: MessageViewModel): RecyclerView.
     }
 
     override fun getItemCount(): Int {
-        return viewModel.msgLiveData.value?.size ?: 0
+        return messageList.size ?: 0
     }
 
 }

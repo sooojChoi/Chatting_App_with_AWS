@@ -5,6 +5,7 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
+import org.json.JSONObject
 
 
 class HttpWebSocket {
@@ -31,6 +32,9 @@ class HttpWebSocket {
         override fun onMessage(webSocket: WebSocket, text: String) {
             super.onMessage(webSocket, text)
             Log.d("TLOG", "text 데이터 확인 : $text")
+            val json = JSONObject(text)
+            Log.d("TLOG","${json.get("text")}")
+
         }
 
         override fun onMessage(webSocket: WebSocket, bytes: ByteString) {

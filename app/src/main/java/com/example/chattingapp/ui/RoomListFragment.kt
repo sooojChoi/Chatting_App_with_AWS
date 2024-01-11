@@ -14,6 +14,7 @@ import android.view.ViewGroup
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.DialogFragment
+import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
@@ -22,6 +23,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.Group
 import com.amplifyframework.datastore.generated.model.Room
+import com.example.chattingapp.MainActivity
 import com.example.chattingapp.R
 import com.example.chattingapp.databinding.FragmentRoomListBinding
 import com.example.chattingapp.databinding.SelectFriendDialogBinding
@@ -33,13 +35,15 @@ import java.lang.IllegalStateException
 
 
 
-class RoomListFragment : Fragment() {
+class RoomListFragment : Fragment(), FragmentManager.OnBackStackChangedListener {
     private val userViewModel: UserInfoViewModel by activityViewModels()
     private val roomViewModel: RoomViewModel by activityViewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // listen to backstack changes
+        activity?.getSupportFragmentManager()?.addOnBackStackChangedListener(this);
 
 
     }
@@ -101,9 +105,18 @@ class RoomListFragment : Fragment() {
                 // 방이 정말 선택되었을 때만 이동할 수 있도록.
                 findNavController().navigate(R.id.action_roomListFragment_to_chattingFragment)
                 roomViewModel.itemClickEvent.value=-1
-            }
+           }
         }
 
+    }
+
+    override fun onBackStackChanged() {
+        if (activity != null) {
+            // enable Up button only if there are entries on the backstack
+            if (activity?.supportFragmentManager?.backStackEntryCount!! < 1) {
+                (activity as MainActivity?)!!.hideUpButton()
+            }
+        }
     }
 }
 
@@ -162,6 +175,7 @@ class SelectFriendDialog: DialogFragment(){
                                         //view model에도 추가
                                         val room_arr = roomViewModel.roomLiveData.value ?: arrayListOf()
                                         room_arr.add(it.item())
+                                        room_arr.sortedByDescending { it.lastMsgTime }
 
                                         roomViewModel.roomLiveData.postValue(room_arr)
                                       //  roomViewModel.currentRoomId.postValue(it.item().id)

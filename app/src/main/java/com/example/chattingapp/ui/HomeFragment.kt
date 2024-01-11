@@ -5,30 +5,24 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
-import aws.smithy.kotlin.runtime.util.length
-import com.amplifyframework.core.Amplify
-import com.amplifyframework.core.model.query.Where
-import com.amplifyframework.datastore.generated.model.User
 import com.example.chattingapp.MainActivity
 import com.example.chattingapp.R
 import com.example.chattingapp.databinding.FragmentHomeBinding
 import com.example.chattingapp.ui.login.UserInfoViewModel
-import com.example.chattingapp.ui.login.UserModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 
 
-class HomeFragment : Fragment() {
+class HomeFragment : Fragment(){
     private val viewModel: UserInfoViewModel by activityViewModels()
     private lateinit var myEmail:String
     private lateinit var myName:String
@@ -46,8 +40,6 @@ class HomeFragment : Fragment() {
 //        viewModel.userNameLiveData.value = myName
 
         coroutineScope= CoroutineScope(Dispatchers.Main)
-
-
 
     }
 
@@ -135,4 +127,6 @@ class HomeFragment : Fragment() {
 
 
     }
+
+
 }

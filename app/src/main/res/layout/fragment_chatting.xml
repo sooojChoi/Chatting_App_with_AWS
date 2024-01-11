@@ -11,7 +11,7 @@
     tools:context=".ui.ChattingFragment">
 
      <androidx.recyclerview.widget.RecyclerView
-         android:id="@+id/recyclerView"
+         android:id="@+id/chattingRecyclerView"
          android:layout_width="match_parent"
          android:layout_height="0dp"
          android:layout_marginBottom="8dp"
@@ -54,8 +54,7 @@
 
               android:backgroundTint="@color/main_orange"
               android:scaleType="fitCenter"
-              android:src="@android:drawable/btn_star"
-              tools:src="@drawable/icon_sent_msg" />
+              android:src="@drawable/icon_sent_msg" />
 
      </LinearLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

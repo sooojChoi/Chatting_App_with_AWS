@@ -8,6 +8,7 @@ import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
+import android.view.MenuItem
 import android.widget.Toast
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -18,7 +19,6 @@ import androidx.navigation.findNavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
 import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.aws.AWSApiPlugin
@@ -31,41 +31,41 @@ import com.amplifyframework.core.model.query.ObserveQueryOptions
 import com.amplifyframework.core.model.query.QuerySortBy
 import com.amplifyframework.core.model.query.QuerySortOrder
 import com.amplifyframework.core.model.query.Where
-import com.amplifyframework.core.model.query.predicate.QueryPredicate
 import com.amplifyframework.core.model.query.predicate.QueryPredicates
-import com.example.chattingapp.databinding.ActivityMainBinding
-import com.example.chattingapp.ui.login.SignUpActivity
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.WebSocket
-import org.json.JSONObject
 import com.amplifyframework.datastore.AWSDataStorePlugin
 import com.amplifyframework.datastore.DataStoreConfiguration
 import com.amplifyframework.datastore.DataStoreException
 import com.amplifyframework.datastore.DataStoreQuerySnapshot
 import com.amplifyframework.datastore.generated.model.Group
+import com.amplifyframework.datastore.generated.model.Message
 import com.amplifyframework.datastore.generated.model.Room
 import com.amplifyframework.datastore.generated.model.User
+import com.example.chattingapp.databinding.ActivityMainBinding
 import com.example.chattingapp.ui.MessageListAdapter
+import com.example.chattingapp.ui.MessageViewModel
 import com.example.chattingapp.ui.RoomListAdapter
 import com.example.chattingapp.ui.RoomViewModel
+import com.example.chattingapp.ui.login.SignUpActivity
 import com.example.chattingapp.ui.login.UserInfoViewModel
 import com.example.chattingapp.ui.login.UserModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.WebSocket
+import org.json.JSONObject
 
 
 class MainActivity : AppCompatActivity() {
     val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
     private lateinit var ws: WebSocket
-    private var lineNumber = 0
     lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
     private lateinit var myEmail:String
     private val userViewModel: UserInfoViewModel by viewModels()
     private val roomViewModel: RoomViewModel by viewModels()
+    private val messageViewModel: MessageViewModel by viewModels()
     lateinit var coroutineScope: CoroutineScope
     private lateinit var appBarConfiguration: AppBarConfiguration
 
@@ -77,8 +77,10 @@ class MainActivity : AppCompatActivity() {
         // amplify pulgin추가, 초기화 작업
         initAmplify()
 
+        // toolbar 설정
         setSupportActionBar(findViewById(R.id.toolbar2))
 
+        // bottom navigation 설정
         val navHostFragment =
             supportFragmentManager.findFragmentById(R.id.fragment) as NavHostFragment
         val navController = navHostFragment.navController
@@ -121,12 +123,15 @@ class MainActivity : AppCompatActivity() {
             .put("action", "sendmessage")
             .put("data", command)
             .toString())
-        // 메시지 보낸 것을 화면 상의 텍스트뷰에 나타냄.
+
         Log.i(TAG,"데이터 전송")
+    }
 
+    fun sendMessage(obj: JSONObject){
+        Log.i("websocket sending process","MainActivity sendMessage 함수 호출됨")
 
-
-
+        ws.send(obj.toString())
+        Log.i("websocket sending process","데이터 전송됨")
     }
 
     private fun setupWebSocket() {
@@ -183,11 +188,13 @@ class MainActivity : AppCompatActivity() {
         try {
             Amplify.addPlugin(AWSApiPlugin())
         //    Amplify.addPlugin(AWSDataStorePlugin())
+            // cloud의 DynamoDB에 있는 데이터들을 local datastore로 sync한다.
             Amplify.addPlugin(AWSDataStorePlugin.builder().dataStoreConfiguration(
                 DataStoreConfiguration.builder()
                     .syncExpression(User::class.java){ QueryPredicates.all()}
                     .syncExpression(Room::class.java){ QueryPredicates.all()}
                     .syncExpression(Group::class.java){ QueryPredicates.all()}
+                    .syncExpression(Message::class.java) {QueryPredicates.all()}
                     .build())
                 .build())
 
@@ -299,51 +306,67 @@ class MainActivity : AppCompatActivity() {
     fun getRoomFromDynamoDB(){
         // room 정보는 observe하지 않고 query를 통해 가져온다.
         // room 정보가 바뀌는 것은 새 메세지가 올 때마다 바뀌기 때문에 빈번하게 일어난다.
-        // websocket으로부터 메시지가 올 때마다 바뀌도록 한다.
+        // websocket으로부터 메시지가 올 때마다 viewModel에 추가하도록 한다.
+        val TAG = "room from dynamodb"
         val roomArray = ArrayList<Room>()
         Amplify.DataStore.query(Group::class.java,
             Where.matches(Group.USER_ID.eq(myEmail)),
             { myGroups ->
                 while (myGroups.hasNext()) {
-                    Log.i("room livedata test", "일치하는 group 있음")
+                    Log.i(TAG, "일치하는 group 있음")
                     val group = myGroups.next()
                     Amplify.DataStore.query(Room::class.java,
                         Where.matches(Room.ID.eq(group.roomId))
                             .sorted(Room.LAST_MSG_TIME.descending()),
                         { rooms ->
                             while (rooms.hasNext()) {
-                                Log.i("room livedata test", "일치하는 room 있음")
+                                Log.i(TAG, "일치하는 room 있음")
                                 val room = rooms.next()
                                 roomArray.add(room)
-                                Log.i("room livedata test","roomArray size: ${roomArray.size}")
-
-                                CoroutineScope(Dispatchers.Main).launch {
-                                    roomViewModel.roomLiveData.postValue(roomArray)
-                                    if(roomViewModel.roomLiveData.value==null){
-                                        Log.i("room livedata test","room is null")
-                                    }else if(roomViewModel.roomLiveData.value!!.size==0){
-                                        Log.i("room livedata test","room size is 0.")
-                                    }else{
-                                        roomViewModel.roomLiveData.value!!.forEach {
-                                            Log.i("room livedata test","room id is ${it.id}.")
-                                        }
-                                    }
-                                }
-
-
-                                Log.i("room livedata test", "Title: ${room.id}")
-
+                                Log.i(TAG,"roomArray size: ${roomArray.size}")
+                                Log.i(TAG, "Title: ${room.id}")
                             }
-
                         },
-                        { Log.e("room livedata test", "Query failed", it) }
+                        { Log.e(TAG, "Query failed", it) }
                     )
+                }
+                CoroutineScope(Dispatchers.Main).launch {
+                    roomArray.sortedByDescending { it.lastMsgTime }
+                    roomViewModel.roomLiveData.postValue(roomArray)
+                    // message 정보를 가져온다.
+                   // getMessageFromDynamoDB()
 
                 }
-
-                Log.i("room livedata test","room에 데이터 추가")
+                Log.i(TAG,"room에 데이터 추가")
             },
-            { Log.e("room livedata test", "Query failed", it) }
+            { Log.e(TAG, "Query failed", it) }
+        )
+
+    }
+
+    fun getMessageFromDynamoDB(roomId:String) {
+        val TAG = "message from dynamodb"
+
+        val messageArray = ArrayList<Message>()
+        Amplify.DataStore.query(Message::class.java,
+            Where.matches(Message.ROOM_ID.eq(roomId))
+                .sorted(Message.DATETIME.descending()),
+            {
+                messages ->
+                while(messages.hasNext()){
+                    val message = messages.next()
+                    messageArray.add(message)
+                }
+                CoroutineScope(Dispatchers.Main).launch {
+                    messageViewModel.msgLiveData.postValue(messageArray)
+                    val roomIdArray = messageViewModel.roomIdWithMessage.value ?: ArrayList<String>()
+                    roomIdArray?.add(roomId)
+                    messageViewModel.roomIdWithMessage.postValue(roomIdArray)
+                }
+            },
+            {
+                Log.i(TAG, "Qeury failed", it)
+            }
         )
 
     }
@@ -367,9 +390,25 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    // room list fragment에서 chatting fragment로 이동
-    fun fromRoomFragToChatFrag(){
 
+    // toolbar의 back button이 눌리면 프래그먼트 스택 하나 뒤로 감.
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when (item.itemId) {
+            android.R.id.home -> {
+                supportFragmentManager.popBackStack()
+                hideUpButton()
+                return true
+            }
+        }
+        return super.onOptionsItemSelected(item)
+    }
+
+    fun showUpButton() {
+        supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+    }
+
+    fun hideUpButton() {
+        supportActionBar!!.setDisplayHomeAsUpEnabled(false)
     }
 
 }
