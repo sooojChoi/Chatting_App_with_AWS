@@ -22,6 +22,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.Group
+import com.amplifyframework.datastore.generated.model.Message
 import com.amplifyframework.datastore.generated.model.Room
 import com.example.chattingapp.MainActivity
 import com.example.chattingapp.R
@@ -32,7 +33,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.lang.IllegalStateException
-
+import java.util.Collections
 
 
 class RoomListFragment : Fragment(), FragmentManager.OnBackStackChangedListener {
@@ -91,7 +92,11 @@ class RoomListFragment : Fragment(), FragmentManager.OnBackStackChangedListener 
 
         // 방이 추가되면 화면에 업데이트
         roomViewModel.roomLiveData.observe(viewLifecycleOwner){
-            val adapter = RoomListAdapter(roomViewModel)
+            // last msg time을 기준으로 내림차순 정렬하여 나타냄.
+            val room_arr = it ?: ArrayList()
+            Collections.sort(room_arr, RoomMsgTimeComparator())
+
+            val adapter = RoomListAdapter(room_arr, roomViewModel)
             binding.roomRecyclerView.adapter = adapter
             binding.roomRecyclerView.layoutManager = LinearLayoutManager(context)
             binding.roomRecyclerView.setHasFixedSize(true)
@@ -151,13 +156,16 @@ class SelectFriendDialog: DialogFragment(){
                         // 선택된 user id 목록
                         val checkedUserList = arrayListOf<String>()
                         var members:String =""
+                        var ids:String=""
                         UserListWithCheckAdapter.checkboxList.forEach {
                             if(it.checked){
                                 checkedUserList.add(it.id)
                                 members+="${it.name}\n"
+                                ids+="${it.id}\n"
                             }
                         }
                         members+=userViewModel.userNameLiveData.value
+                        ids+=userViewModel.emailLiveData.value
                         // dialog를 다시 열었을 때 체크 표시 초기화 되어있도록.
                         UserListWithCheckAdapter.checkboxList.clear()
 
@@ -167,15 +175,15 @@ class SelectFriendDialog: DialogFragment(){
                             val currentTime = System.currentTimeMillis().toString()
                             // Room table에 항목 추가
                             val roomItem = Room.builder().name(members)
-                                .lastMsgTime(currentTime).build()
+                                .lastMsgTime(currentTime).members(ids).build()
                             try{
                                 Amplify.DataStore.save(roomItem,
-                                    {
+                                    { it ->
                                         Log.i("MyAmplifyApp", "Created a new room successfully")
                                         //view model에도 추가
                                         val room_arr = roomViewModel.roomLiveData.value ?: arrayListOf()
                                         room_arr.add(it.item())
-                                        room_arr.sortedByDescending { it.lastMsgTime }
+                                        Collections.sort(room_arr, RoomMsgTimeComparator())
 
                                         roomViewModel.roomLiveData.postValue(room_arr)
                                       //  roomViewModel.currentRoomId.postValue(it.item().id)
@@ -224,5 +232,26 @@ class SelectFriendDialog: DialogFragment(){
             builder.create()
         } ?: throw IllegalStateException("Activity cannot be null")
 
+    }
+}
+
+class RoomMsgTimeComparator: Comparator<Room>{
+    override fun compare(o1: Room?, o2: Room?): Int {
+        //lastMsgTime을 기준으로 내림차순 정렬
+        if(o1?.lastMsgTime!! > o2?.lastMsgTime!!){
+            return -1
+        }else{
+            return 1
+        }
+    }
+}
+
+class MsgSentTimeComparator: Comparator<Message>{
+    override fun compare(o1: Message?, o2: Message?): Int {
+        if(o1?.datetime!! > o2?.datetime!!){
+            return 1
+        }else{
+            return -1
+        }
     }
 }

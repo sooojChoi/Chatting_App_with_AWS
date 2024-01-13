@@ -5,17 +5,18 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
+import com.amplifyframework.datastore.generated.model.Room
 import com.example.chattingapp.MainActivity
 import com.example.chattingapp.databinding.RoomRecyclerItemBinding
 import java.text.SimpleDateFormat
 
-class RoomListAdapter(private val viewModel: RoomViewModel): RecyclerView.Adapter<RoomListAdapter.ViewHolder>() {
+class RoomListAdapter(private val rooms: ArrayList<Room>, private val viewModel:RoomViewModel): RecyclerView.Adapter<RoomListAdapter.ViewHolder>() {
     companion object {
         var myName=""
     }
     inner class ViewHolder(private val binding: RoomRecyclerItemBinding): RecyclerView.ViewHolder(binding.root){
         fun setContents(pos:Int){
-            val room = viewModel.roomLiveData.value?.get(pos)
+            val room = rooms.get(pos)
 
             // 방 이름 구하기 (멤버들 이름으로 구성됨)
             val members = room?.name?.split("\n")
@@ -71,6 +72,6 @@ class RoomListAdapter(private val viewModel: RoomViewModel): RecyclerView.Adapte
     }
 
     override fun getItemCount(): Int {
-        return viewModel.roomLiveData.value?.size ?: 0
+        return rooms.size ?: 0
     }
 }

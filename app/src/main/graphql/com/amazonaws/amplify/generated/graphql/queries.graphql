@@ -73,6 +73,7 @@ query GetRoom($id: ID!) {
     last_msg_time
     last_msg
     last_msg_sender
+    members
     createdAt
     updatedAt
     _version
@@ -94,6 +95,7 @@ query ListRooms(
       last_msg_time
       last_msg
       last_msg_sender
+      members
       createdAt
       updatedAt
       _version
@@ -125,6 +127,7 @@ query SyncRooms(
       last_msg_time
       last_msg
       last_msg_sender
+      members
       createdAt
       updatedAt
       _version

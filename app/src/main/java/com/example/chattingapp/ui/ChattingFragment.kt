@@ -62,7 +62,7 @@ class ChattingFragment : Fragment() {
             // 메시지 받을 때는, viewmodel에 message 저장, room 객체 수정
 
             val time = System.currentTimeMillis().toString()
-            val messageItem = Message.builder().fromId(userViewModel.emailLiveData.value)
+            val messageItem = Message.builder().fromId(userViewModel.emailLiveData.value ?: "")
                 .text(binding.sendEditText.text.toString())
                 .datetime(System.currentTimeMillis().toString())
                 .roomId(room.id)
@@ -71,6 +71,7 @@ class ChattingFragment : Fragment() {
                 .build()
             val roomItem = Room.builder().name(room.name)
                 .lastMsgTime(time)
+                .members(room.members)
                 .lastMsg(binding.sendEditText.text.toString())
                 .id(room.id)
                 .build()
@@ -90,7 +91,7 @@ class ChattingFragment : Fragment() {
                     newRoomArr.add(it)
                 }
             }
-            roomViewModel.roomLiveData.value = roomArr
+            roomViewModel.roomLiveData.value = newRoomArr
 
             // json 타입으로 메시지, 방 정보를 만들어서 웹소켓을 통해 서버로 전송한다.
             val sendingMessage = makeJsonObject(messageItem, roomItem)
@@ -100,11 +101,13 @@ class ChattingFragment : Fragment() {
 
         // message 추가되면 recycler view 업데이트.
         messageViewModel.msgLiveData.observe(viewLifecycleOwner){
+            Log.i("message","msg livedata observer 호출됨, ${room.id}")
             // 현재 방의 메시지만 가져온다.
             val msgForMyRoom = ArrayList<Message>()
-            messageViewModel.msgLiveData.value?.forEach {
-                if(it.roomId == room.id){
-                    msgForMyRoom.add(it)
+            it.forEach {
+                msg ->
+                if(msg.roomId == room.id){
+                    msgForMyRoom.add(msg)
                 }
             }
             val adapter = MessageListAdapter(msgForMyRoom)
@@ -118,8 +121,10 @@ class ChattingFragment : Fragment() {
     fun makeJsonObject(msg:Message, room:Room):JSONObject{
         return JSONObject()
             .put("action", "sendmessage")
+            .put("msgId",msg.id)
             .put("fromId",msg.fromId)
             .put("text",msg.text)
+            .put("msgDateTime", msg.datetime)
             .put("msgRoomId",msg.roomId)
             .put("type",msg.type)
             .put("fromName",msg.fromName)
@@ -127,6 +132,7 @@ class ChattingFragment : Fragment() {
             .put("lastMsgTime",room.lastMsgTime)
             .put("lastMsg",room.lastMsg)
             .put("roomName",room.name)
+            .put("members",room.members)
     }
 
 

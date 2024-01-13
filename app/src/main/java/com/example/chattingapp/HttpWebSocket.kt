@@ -33,7 +33,8 @@ class HttpWebSocket {
             super.onMessage(webSocket, text)
             Log.d("TLOG", "text 데이터 확인 : $text")
             val json = JSONObject(text)
-            Log.d("TLOG","${json.get("text")}")
+            Log.d("TLOG","${json.get("members")}")
+
 
         }
 

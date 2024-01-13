@@ -43,7 +43,9 @@ import com.amplifyframework.datastore.generated.model.User
 import com.example.chattingapp.databinding.ActivityMainBinding
 import com.example.chattingapp.ui.MessageListAdapter
 import com.example.chattingapp.ui.MessageViewModel
+import com.example.chattingapp.ui.MsgSentTimeComparator
 import com.example.chattingapp.ui.RoomListAdapter
+import com.example.chattingapp.ui.RoomMsgTimeComparator
 import com.example.chattingapp.ui.RoomViewModel
 import com.example.chattingapp.ui.login.SignUpActivity
 import com.example.chattingapp.ui.login.UserInfoViewModel
@@ -54,8 +56,12 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.Response
 import okhttp3.WebSocket
+import okhttp3.WebSocketListener
+import okio.ByteString
 import org.json.JSONObject
+import java.util.Collections
 
 
 class MainActivity : AppCompatActivity() {
@@ -128,11 +134,58 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun sendMessage(obj: JSONObject){
+        // websocket으로 메시지 전송
         Log.i("websocket sending process","MainActivity sendMessage 함수 호출됨")
 
         ws.send(obj.toString())
         Log.i("websocket sending process","데이터 전송됨")
     }
+
+    fun receiveMessage(obj: JSONObject){
+        // websocket으로부터 메시지 받은 함수에서 호출되는 함수
+        val tag = "websocket receiving process"
+        Log.i(tag, "MainActivity receiveMessage 함수 호출됨")
+
+        val fromId = obj.get("fromId").toString()
+        // 내가 보낸 메시지가 아닐 경우, viewModel에 추가.
+        // 내가 보낸 메시지일 경우 ChattingFragment에서 viewModel에 추가한다.
+        if(fromId != userViewModel.emailLiveData.value){
+            val messageItem = Message.builder().fromId(fromId)
+                .text(obj.get("text").toString())
+                .datetime(obj.get("msgDateTime").toString())
+                .roomId(obj.get("msgRoomId").toString())
+                .type(obj.get("type").toString())
+                .fromName(obj.get("fromName").toString())
+                .id(obj.get("msgId").toString())
+                .build()
+            val roomItem = Room.builder().name(obj.get("roomName").toString())
+                .lastMsgTime(obj.get("lastMsgTime").toString())
+                .members(obj.get("members").toString())
+                .lastMsg(obj.get("lastMsg").toString())
+                .id(obj.get("roomId").toString())
+                .build()
+
+
+            // message viewModel에 데이터 추가
+            val msgArr = messageViewModel.msgLiveData.value ?: ArrayList<Message>()
+            msgArr.add(messageItem)
+            messageViewModel.msgLiveData.postValue(msgArr)
+
+            // room viewModel의 데이터 수정
+            val roomArr = roomViewModel.roomLiveData.value!!
+            val newRoomArr = ArrayList<Room>()
+            roomArr.forEach {
+                if(it.id == roomItem.id){
+                    newRoomArr.add(roomItem)
+                }else{
+                    newRoomArr.add(it)
+                }
+            }
+            roomViewModel.roomLiveData.postValue(roomArr)
+        }
+    }
+
+
 
     private fun setupWebSocket() {
         Log.i(TAG,"웹 소켓 생성")
@@ -141,8 +194,50 @@ class MainActivity : AppCompatActivity() {
             .url(getString(R.string.websocket_url))
             .build()
 
-        // 웹 소켓 생성.
-        ws = OkHttpClient().newWebSocket(request, HttpWebSocket().listener)
+        // 웹 소켓 생성
+        //ws = OkHttpClient().newWebSocket(request, HttpWebSocket().listener)
+        ws = OkHttpClient().newWebSocket(request, object: WebSocketListener() {
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+                super.onClosed(webSocket, code, reason)
+                Log.d("TLOG", "소켓 onClosed. code: $code, reason: $reason")
+
+                webSocket.close(1000, null)
+                webSocket.cancel()
+            }
+
+            override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+                super.onClosing(webSocket, code, reason)
+                Log.d("TLOG", "소켓 onClosing. code: $code, reason: $reason")
+
+            }
+
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+                super.onFailure(webSocket, t, response)
+                Log.d("TLOG", "소켓 onFailure : $t")
+            }
+
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                super.onMessage(webSocket, text)
+                Log.d("TLOG", "text 데이터 확인 : $text")
+
+                // 받은 데이터를 viewModel에 저장.
+                val json = JSONObject(text)
+                receiveMessage(json)
+            }
+
+            override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
+                super.onMessage(webSocket, bytes)
+                Log.d("TLOG", "ByteString 데이터 확인 : $bytes")
+            }
+
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                super.onOpen(webSocket, response)
+                Log.d("TLOG", "소켓 onOpen, 전송 데이터 확인 : $webSocket : $response")
+
+            }
+        })
+
+
     }
 
 
@@ -181,6 +276,8 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+
 
     // cognito 사용을 위해 amplify를 초기화한다.
     fun initAmplify(){
@@ -224,8 +321,8 @@ class MainActivity : AppCompatActivity() {
                     if(myEmail.contains('@')){
                         setupWebSocket()
                         // local store에 대한 observe 등록
-                        getUserInfoFromDynamoDB()
-                        getRoomFromDynamoDB()
+                        changeSync()
+
 
                     }else{
                         runOnUiThread {
@@ -273,11 +370,14 @@ class MainActivity : AppCompatActivity() {
                 }
                 userViewModel.otherUsersLiveData.postValue(userArray)
               //  viewModel.otherUsersLiveData.value = userArray
+
+                getRoomFromDynamoDB()
             }
 
         val observationStarted =
             Consumer { _: Cancelable ->
                 Log.d(tag, "success on cancelable")
+
             }
         val onObservationError =
             Consumer { value: DataStoreException ->
@@ -308,6 +408,7 @@ class MainActivity : AppCompatActivity() {
         // room 정보가 바뀌는 것은 새 메세지가 올 때마다 바뀌기 때문에 빈번하게 일어난다.
         // websocket으로부터 메시지가 올 때마다 viewModel에 추가하도록 한다.
         val TAG = "room from dynamodb"
+        Log.i(TAG, "getRoomFromDynamoDB 호출됨")
         val roomArray = ArrayList<Room>()
         Amplify.DataStore.query(Group::class.java,
             Where.matches(Group.USER_ID.eq(myEmail)),
@@ -316,8 +417,7 @@ class MainActivity : AppCompatActivity() {
                     Log.i(TAG, "일치하는 group 있음")
                     val group = myGroups.next()
                     Amplify.DataStore.query(Room::class.java,
-                        Where.matches(Room.ID.eq(group.roomId))
-                            .sorted(Room.LAST_MSG_TIME.descending()),
+                        Where.matches(Room.ID.eq(group.roomId)),
                         { rooms ->
                             while (rooms.hasNext()) {
                                 Log.i(TAG, "일치하는 room 있음")
@@ -326,17 +426,14 @@ class MainActivity : AppCompatActivity() {
                                 Log.i(TAG,"roomArray size: ${roomArray.size}")
                                 Log.i(TAG, "Title: ${room.id}")
                             }
+                            CoroutineScope(Dispatchers.Main).launch {
+                                roomViewModel.roomLiveData.postValue(roomArray)
+                            }
                         },
                         { Log.e(TAG, "Query failed", it) }
                     )
                 }
-                CoroutineScope(Dispatchers.Main).launch {
-                    roomArray.sortedByDescending { it.lastMsgTime }
-                    roomViewModel.roomLiveData.postValue(roomArray)
-                    // message 정보를 가져온다.
-                   // getMessageFromDynamoDB()
 
-                }
                 Log.i(TAG,"room에 데이터 추가")
             },
             { Log.e(TAG, "Query failed", it) }
@@ -347,7 +444,7 @@ class MainActivity : AppCompatActivity() {
     fun getMessageFromDynamoDB(roomId:String) {
         val TAG = "message from dynamodb"
 
-        val messageArray = ArrayList<Message>()
+        val messageArray = messageViewModel.msgLiveData.value ?: ArrayList()
         Amplify.DataStore.query(Message::class.java,
             Where.matches(Message.ROOM_ID.eq(roomId))
                 .sorted(Message.DATETIME.descending()),
@@ -358,6 +455,10 @@ class MainActivity : AppCompatActivity() {
                     messageArray.add(message)
                 }
                 CoroutineScope(Dispatchers.Main).launch {
+                    // 처음에 db에서 가져올 때만 오름차순 정렬해주면,
+                    // 그 다음부터 추가되는 msg는 viewModel에 순차적으로 추가되기 때문에
+                    // 또 정렬해주지 않아도 된다!
+                    Collections.sort(messageArray, MsgSentTimeComparator())
                     messageViewModel.msgLiveData.postValue(messageArray)
                     val roomIdArray = messageViewModel.roomIdWithMessage.value ?: ArrayList<String>()
                     roomIdArray?.add(roomId)
@@ -379,7 +480,8 @@ class MainActivity : AppCompatActivity() {
                 Amplify.DataStore.start(
                     {
                         Log.i("MyAmplifyApp", "DataStore started")
-
+                        getUserInfoFromDynamoDB()
+                        //getRoomFromDynamoDB()
                     },{
                         Log.i("MyAmplifyApp", "DataStore Exception", it)
                     }
