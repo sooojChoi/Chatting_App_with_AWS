@@ -1,12 +1,17 @@
 package com.example.chattingapp.ui
 
+import android.content.Context
+import android.hardware.input.InputManager
 import com.example.chattingapp.R
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.InputMethodManager
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.getSystemService
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -24,6 +29,7 @@ class ChattingFragment : Fragment() {
     private val roomViewModel: RoomViewModel by activityViewModels()
     private val messageViewModel:MessageViewModel by activityViewModels()
     lateinit var room:Room
+    private lateinit var callback: OnBackPressedCallback
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -112,9 +118,20 @@ class ChattingFragment : Fragment() {
             }
             val adapter = MessageListAdapter(msgForMyRoom)
             binding.chattingRecyclerView.adapter = adapter
-            binding.chattingRecyclerView.layoutManager = LinearLayoutManager(context)
-            binding.chattingRecyclerView.setHasFixedSize(true)
+            binding.chattingRecyclerView.layoutManager = LinearLayoutManager(context).apply {
+                this.stackFromEnd = false  // 가장 최근의 대화를 표시하기 위해 맨 아래로 스크롤 하는 것을 false
+                this.reverseLayout = false  // data들을 반대로 쌓아올리는 것을 false
+            }
+            binding.chattingRecyclerView.setHasFixedSize(false)  // 각 item 크기가 바뀔 수 있음.
+            binding.chattingRecyclerView.scrollToPosition(msgForMyRoom.size-1)  // 마지막 item으로 스크롤(아래로 스크롤)
+            binding.chattingRecyclerView.addOnLayoutChangeListener { v, left, top, right, bottom, oldLeft, oldTop, oldRight, oldBottom ->
+                // 키보드가 올라오면 감지해서 마지막 item 보여지도록.
+                binding.chattingRecyclerView.scrollToPosition(msgForMyRoom.size-1)
+            }
+
         }
+
+
 
     }
 
@@ -143,7 +160,22 @@ class ChattingFragment : Fragment() {
 
         // toolbar의 back button이 나타나게 함.
         (activity as MainActivity).showUpButton()
-  }
+    }
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+
+        callback = object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                // 하단의 뒤로가기 버튼을 누르면,
+                // tool bar의 뒤로가기 버튼을 눌렀을 때와 동일하게 동작한다.
+                parentFragmentManager.popBackStack()
+                (activity as MainActivity).hideUpButton()
+            }
+        }
+        requireActivity().onBackPressedDispatcher.addCallback(this, callback)
+    }
+
 
 
 
@@ -187,6 +219,12 @@ class ChattingFragment : Fragment() {
         else bottomNavigation.visibility = View.VISIBLE
     }
 
+//    fun hideKeyboard(){
+//        if(activity != null && requireActivity().currentFocus !=null){
+//            val inputManager = requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+//            inputManager.hideSoftInputFromWindow(requireActivity().currentFocus?.windowToken, InputMethodManager.HIDE_NOT_ALWAYS)
+//        }
+//    }
 
 
 }

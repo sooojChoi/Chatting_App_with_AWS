@@ -9,7 +9,11 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
+import android.view.MotionEvent
+import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.Toast
+import android.window.OnBackInvokedDispatcher
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -181,7 +185,7 @@ class MainActivity : AppCompatActivity() {
                     newRoomArr.add(it)
                 }
             }
-            roomViewModel.roomLiveData.postValue(roomArr)
+            roomViewModel.roomLiveData.postValue(newRoomArr)
         }
     }
 
@@ -511,6 +515,17 @@ class MainActivity : AppCompatActivity() {
 
     fun hideUpButton() {
         supportActionBar!!.setDisplayHomeAsUpEnabled(false)
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        // 화면 터치시 키보드 내려가도록.
+        val imm: InputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
+
+        if(currentFocus is EditText) {
+            currentFocus!!.clearFocus()
+        }
+        return super.dispatchTouchEvent(ev)
     }
 
 }
