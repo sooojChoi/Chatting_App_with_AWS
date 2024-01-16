@@ -56,6 +56,7 @@ class MessageListAdapter(private val messageList: ArrayList<Message>): RecyclerV
                 holder.binding.timeTextView.text = time ?: ""
             }
         }
+
     }
 
     override fun getItemViewType(position: Int): Int {

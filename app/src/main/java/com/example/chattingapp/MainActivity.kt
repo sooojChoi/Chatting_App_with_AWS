@@ -11,7 +11,9 @@ import android.util.Log
 import android.view.MenuItem
 import android.view.MotionEvent
 import android.view.inputmethod.InputMethodManager
+import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
 import android.widget.Toast
 import android.window.OnBackInvokedDispatcher
 import androidx.activity.result.ActivityResultLauncher
@@ -518,13 +520,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
-        // 화면 터치시 키보드 내려가도록.
-        val imm: InputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
+        // 화면 터치시 키보드 내려가도록. 채팅 전송 버튼을 눌렀을 때는 키보드가 내려가지 않도록.
+//        if(!(currentFocus is ImageButton)){
+//            val imm: InputMethodManager = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+//            imm.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
+//
+//            if(currentFocus is EditText) {
+//                currentFocus!!.clearFocus()
+//            }
+//        }
 
-        if(currentFocus is EditText) {
-            currentFocus!!.clearFocus()
-        }
+
         return super.dispatchTouchEvent(ev)
     }
 

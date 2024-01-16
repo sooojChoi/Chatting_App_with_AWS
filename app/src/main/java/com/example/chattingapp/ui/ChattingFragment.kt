@@ -1,17 +1,23 @@
 package com.example.chattingapp.ui
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.hardware.input.InputManager
 import com.example.chattingapp.R
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.getSystemService
+import androidx.core.widget.addTextChangedListener
+import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -56,6 +62,7 @@ class ChattingFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_chatting, container, false)
     }
 
+    @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val binding = FragmentChattingBinding.bind(view)
@@ -132,6 +139,27 @@ class ChattingFragment : Fragment() {
         }
 
 
+        binding.sendButton.isEnabled = false
+        // text를 입력하지 않으면 메시지 전송 버튼이 비활성화됨.
+        binding.sendEditText.doOnTextChanged { text, start, before, count ->
+            binding.sendButton.isEnabled = !(text.toString().equals(""))
+        }
+
+        binding.chattingRecyclerView.setOnTouchListener { v, event ->
+            // 화면 터치시 키보드 내려가도록. 채팅 전송 버튼을 눌렀을 때는 키보드가 내려가지 않도록.
+            if(event.action == MotionEvent.ACTION_DOWN){
+                if(activity != null && activity?.currentFocus != null){
+                    val imm: InputMethodManager = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(activity?.currentFocus?.windowToken, 0)
+
+                    if(activity?.currentFocus is EditText) {
+                        activity?.currentFocus!!.clearFocus()
+                    }
+                }
+            }
+            true
+        }
+        
 
     }
 
