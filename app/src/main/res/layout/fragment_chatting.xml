@@ -33,11 +33,22 @@
          android:layout_width="match_parent"
          android:layout_height="wrap_content"
          android:orientation="horizontal"
-         android:paddingVertical="3dp"
+         android:paddingVertical="6dp"
+         android:layout_marginHorizontal="4dp"
          app:layout_constraintBottom_toBottomOf="parent"
          app:layout_constraintEnd_toEndOf="parent"
          android:background="@color/white"
          app:layout_constraintStart_toStartOf="parent">
+
+          <ImageButton
+              android:id="@+id/galleryButton"
+              android:layout_width="0dp"
+              android:layout_height="match_parent"
+              android:layout_weight="1"
+              android:scaleType="centerCrop"
+              android:src="@drawable/icon_add_yellow"
+              android:backgroundTint="@color/white"
+              />
 
           <EditText
               android:id="@+id/sendEditText"
@@ -46,10 +57,12 @@
               android:layout_weight="7"
               android:ems="10"
               android:inputType="text"
-              android:paddingHorizontal="10dp"
-              android:paddingVertical="14dp"
-              android:text=""
-              android:textSize="17sp"
+              android:paddingHorizontal="12dp"
+              android:paddingVertical="13dp"
+              android:text="안녕"
+              android:layout_marginRight="5dp"
+              android:background="@drawable/round_border_gray"
+              android:textSize="16sp"
 
               />
 

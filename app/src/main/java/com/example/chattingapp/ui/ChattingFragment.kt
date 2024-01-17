@@ -232,6 +232,10 @@ class ChattingFragment : Fragment() {
             }
             false
         }
+
+        binding.galleryButton.setOnClickListener {
+
+        }
         
 
     }

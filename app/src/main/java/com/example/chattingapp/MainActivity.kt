@@ -378,42 +378,6 @@ class MainActivity : AppCompatActivity() {
                     }else{
                         userArray.add(UserModel(it.id, it.name, it.introduction))
                     }
-//                    // room이 이미 있다면, 변경된 user가 속해있는 room의 name 변경
-//                    val tempRoom = ArrayList<Room>()
-//
-//                    if(roomViewModel.roomLiveData.value != null){
-//                        if(roomViewModel.roomLiveData.value?.size!=0){
-//                            roomViewModel.roomLiveData.value?.forEach {
-//                                    room->
-//                                var newName = ""
-//                                if(room.members.contains(it.id)){
-//                                    val members = room.members.split("\n")
-//                                    for(i in members){
-//                                        userViewModel.otherUsersLiveData.value?.forEach {
-//                                            if(it.email.equals(i)){
-//                                                newName += "${it.name}\n"
-//                                            }
-//                                        }
-//                                    }
-//                                    newName += "${userViewModel.userNameLiveData.value}\n"
-//                                    tempRoom.add(Room.builder().name(newName)
-//                                        .lastMsgTime(room.lastMsgTime)
-//                                        .members(room.members)
-//                                        .lastMsg(room.lastMsg)
-//                                        .id(room.id)
-//                                        .build())
-//                                }else{
-//                                    tempRoom.add(Room.builder().name(room.name)
-//                                        .lastMsgTime(room.lastMsgTime)
-//                                        .members(room.members)
-//                                        .lastMsg(room.lastMsg)
-//                                        .id(room.id)
-//                                        .build())
-//                                }
-//                            }
-//                            roomViewModel.roomLiveData.postValue(tempRoom)
-//                        }
-//                    }
 
 
                 }

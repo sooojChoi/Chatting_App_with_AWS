@@ -1,9 +1,14 @@
 package com.example.chattingapp.ui
 
+import android.Manifest
 import android.app.AlertDialog
 import android.app.Dialog
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import androidx.activity.viewModels
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
@@ -15,8 +20,11 @@ import com.example.chattingapp.databinding.EditNameDialogBinding
 import com.example.chattingapp.ui.login.UserInfoViewModel
 import java.lang.IllegalStateException
 import android.util.Log
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import com.amplifyframework.core.model.query.Where
-import com.amplifyframework.datastore.generated.model.Room
+import com.example.chattingapp.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -54,17 +62,65 @@ class EditMySimpleProfileActivity : AppCompatActivity() {
             }
         }
 
+
+        // 프로필 이름 변경
         binding.EditNameButton.setOnClickListener {
             val nameDialogFragment = EditNameDialogFragment()
             nameDialogFragment.show(supportFragmentManager,"nameDialogFragment")
         }
 
-        binding.EditInroButton.setOnClickListener {
+        // 프로필 소개 변경
+        binding.EditIntroButton.setOnClickListener {
             val introDialogFragment = EditIntroductionDialogFragment()
             introDialogFragment.show(supportFragmentManager,"introDialogFragment")
         }
 
+
+        // 가져온 사진 보여주기
+        val pickImageLauncher: ActivityResultLauncher<Intent> =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == RESULT_OK) {
+                    val data: Intent? = result.data
+                    data?.data?.let {
+                        binding.imageView3.clipToOutline = true
+                        binding.imageView3.setImageURI(it)
+                        binding.imageView3.setPadding(0,0,0,0)
+
+                    }
+                }
+            }
+
+        // 갤러리 open
+        val requestPermissionLauncher: ActivityResultLauncher<String> =
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+                if (isGranted) {
+                    val gallery = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
+                    pickImageLauncher.launch(gallery)
+                }
+            }
+
+        // 프로필 사진 변경
+        binding.imageEditButton.setOnClickListener {
+            val check = if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.TIRAMISU) {
+                ContextCompat.checkSelfPermission(this,Manifest.permission.READ_MEDIA_IMAGES)
+            } else{
+                ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+            if(check==PackageManager.PERMISSION_GRANTED){
+                val gallery = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
+                pickImageLauncher.launch(gallery)
+            }else{
+                if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.TIRAMISU) {
+                    requestPermissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
+                }else{
+                    requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                }
+
+            }
+        }
+
     }
+
 
 
 }
@@ -98,34 +154,6 @@ class EditNameDialogFragment: DialogFragment(){
                                 Log.i("MyAmplifyApp", "Post updated successfully!")
                                 userViewModel.userNameLiveData.postValue(binding.nameEditText.text.toString())
                                 RoomListAdapter.myName = binding.nameEditText.text.toString()
-
-//                                // 현재 내가 속한 방들의 room name을 바꿔준다. (dynamoDB 상)
-//                                roomViewModel.roomLiveData.value?.forEach {
-//                                    room ->
-//                                    var newName = ""
-//                                    val members = room.members.split("\n")
-//                                    for(i in members){
-//                                        userViewModel.otherUsersLiveData.value?.forEach {
-//                                            if(it.email.equals(i)){
-//                                                newName += "${it.name}\n"
-//                                            }
-//                                        }
-//                                    }
-//                                    newName += "${binding.nameEditText.text.toString()}\n"
-//                                    val room = Room.builder().name(newName)
-//                                        .lastMsgTime(room.lastMsgTime)
-//                                        .members(room.members)
-//                                        .lastMsg(room.lastMsg)
-//                                        .id(room.id)
-//                                        .build()
-//                                    Amplify.DataStore.save(room,
-//                                        {
-//                                            Log.i("MyAmplifyApp", "Room updated successfully!")
-//                                        },
-//                                        {
-//                                            Log.e("MyAmplifyApp", "Could not update room,", it)
-//                                        })
-//                                }
 
                                 dialog.dismiss()
                             },
