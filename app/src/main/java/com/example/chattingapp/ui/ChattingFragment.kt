@@ -1,10 +1,15 @@
 package com.example.chattingapp.ui
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
 import android.hardware.input.InputManager
+import android.os.Build
 import com.example.chattingapp.R
 import android.os.Bundle
+import android.provider.MediaStore
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -13,7 +18,11 @@ import android.view.ViewGroup
 import android.view.inputmethod.InputMethodManager
 import android.widget.EditText
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.core.content.getSystemService
 import androidx.core.widget.addTextChangedListener
@@ -233,8 +242,42 @@ class ChattingFragment : Fragment() {
             false
         }
 
-        binding.galleryButton.setOnClickListener {
+        // 가져온 사진 보여주기
+        val pickImageLauncher: ActivityResultLauncher<Intent> =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+                if (result.resultCode == AppCompatActivity.RESULT_OK) {
+                    val data: Intent? = result.data
+                    data?.data?.let {
 
+                    }
+                }
+            }
+
+        // 갤러리 open
+        val requestPermissionLauncher: ActivityResultLauncher<String> =
+            registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+                if (isGranted) {
+                    val gallery = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
+                    pickImageLauncher.launch(gallery)
+                }
+            }
+        binding.galleryButton.setOnClickListener {
+            val check = if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.TIRAMISU) {
+                ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_IMAGES)
+            } else{
+                ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            }
+            if(check== PackageManager.PERMISSION_GRANTED){
+                val gallery = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI)
+                pickImageLauncher.launch(gallery)
+            }else{
+                if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.TIRAMISU) {
+                    requestPermissionLauncher.launch(Manifest.permission.READ_MEDIA_IMAGES)
+                }else{
+                    requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                }
+
+            }
         }
         
 

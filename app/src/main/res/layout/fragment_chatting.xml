@@ -59,7 +59,7 @@
               android:inputType="text"
               android:paddingHorizontal="12dp"
               android:paddingVertical="13dp"
-              android:text="안녕"
+              android:text=""
               android:layout_marginRight="5dp"
               android:background="@drawable/round_border_gray"
               android:textSize="16sp"
