@@ -23,6 +23,7 @@ class RoomListAdapter(private val rooms: ArrayList<Room>, private val viewModel:
             var room_name=""
             var check = 0
             if (members != null) {
+                Log.i("roomListname","${members.size}")
                 for(i in 0 until members.size){
                     val name = members[i]
                     // 동명이인이 있을 경우 대비해서, 내 이름은 한 번만 제외.
@@ -43,7 +44,7 @@ class RoomListAdapter(private val rooms: ArrayList<Room>, private val viewModel:
             }
 
             // 마지막 메시지 시간 구하기
-            val dataFormat = SimpleDateFormat("yyyy-MM-dd\nhh:mm")
+            val dataFormat = SimpleDateFormat("yyyy년 MM월 dd일\nhh:mm")
             val time = dataFormat.format(room?.lastMsgTime?.toLong())
 
             binding.RoomNameTextView.text = room_name

@@ -28,6 +28,7 @@ import com.example.chattingapp.databinding.FragmentChattingBinding
 import com.example.chattingapp.ui.login.UserInfoViewModel
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import org.json.JSONObject
+import java.text.SimpleDateFormat
 
 
 class ChattingFragment : Fragment() {
@@ -44,7 +45,32 @@ class ChattingFragment : Fragment() {
         roomViewModel.roomLiveData.value?.forEach {
             if(it.id==roomViewModel.currentRoomId.value){
                 Log.i("room id test","chattingFragment, room id: ${it.id}")
-                room = it
+
+                // room 의 이름을 바꾼 후 room 변수에 저장.
+                var newName=""
+                val members = it.members.split("\n")
+                members.forEach{
+                        member->
+                    if(member!=userViewModel.emailLiveData.value){
+                        for(user in userViewModel.otherUsersLiveData.value!!){
+                            if(user.email==member){
+                                newName+="${user.name}\n"
+                                break
+                            }
+                        }
+                    }
+
+                }
+                newName+="${userViewModel.userNameLiveData.value}"
+
+                room = Room.builder().name(newName)
+                    .lastMsgTime(it.lastMsgTime)
+                    .members(it.members)
+                    .id(it.id)
+                    .lastMsg(it.lastMsg)
+                    .lastMsgSender(it.lastMsgSender)
+                    .build()
+
                 // 지금 방의 메시지 데이터를 가져온 적 없다면 dynamodb에서 가져오기
                 if(!(messageViewModel.roomIdWithMessage.value ?: ArrayList<String>()).contains(it.id)){
                     (activity as MainActivity).getMessageFromDynamoDB(it.id)
@@ -114,13 +140,60 @@ class ChattingFragment : Fragment() {
 
         // message 추가되면 recycler view 업데이트.
         messageViewModel.msgLiveData.observe(viewLifecycleOwner){
-            Log.i("message","msg livedata observer 호출됨, ${room.id}")
             // 현재 방의 메시지만 가져온다.
             val msgForMyRoom = ArrayList<Message>()
+            var datetime = ""
+            val members = room.members.split("\n")
+            // 해당 id에 맞는 이름들을 저장.
+            val fromName: MutableMap<String, String> = HashMap()
+            for(id in members){
+                userViewModel.otherUsersLiveData.value?.forEach {
+                    if(it.email.equals(id)){
+                        fromName.put(id, it.name)
+                    }
+                }
+            }
             it.forEach {
                 msg ->
                 if(msg.roomId == room.id){
-                    msgForMyRoom.add(msg)
+                    // 가장 첫 번째 메시지 전에는 먼저 날짜 item 넣어준다.
+                    if(msgForMyRoom.size==0){
+                        msgForMyRoom.add(
+                            Message.builder().fromId("")
+                                .text("")
+                                .datetime(msg.datetime)
+                                .roomId("")
+                                .type("datetime")
+                                .fromName("")
+                                .build()
+                        )
+                        val dataFormat = SimpleDateFormat("yyyy년 MM월 dd일")
+                        datetime = dataFormat.format(msg.datetime?.toLong())
+                    }else{
+                        //첫 번째 item이 아닐 때, 이전 메시지와 날짜가 다르면 날짜 item 넣어준다.
+                        val dataFormat = SimpleDateFormat("yyyy년 MM월 dd일")
+                        val currentTime = dataFormat.format(msg.datetime?.toLong())
+                        if(currentTime != datetime){
+                            msgForMyRoom.add(
+                                Message.builder().fromId("")
+                                    .text("")
+                                    .datetime(msg.datetime)
+                                    .roomId("")
+                                    .type("datetime")
+                                    .fromName("")
+                                    .build()
+                            )
+                        }
+                        datetime = currentTime
+                    }
+                    // text 또는 picture
+                    msgForMyRoom.add(Message.builder().fromId(msg.fromId)
+                        .text(msg.text)
+                        .datetime(msg.datetime)
+                        .roomId(msg.roomId)
+                        .type(msg.type)
+                        .fromName(fromName.get(msg.fromId))
+                        .build())
                 }
             }
             val adapter = MessageListAdapter(msgForMyRoom)
@@ -157,7 +230,7 @@ class ChattingFragment : Fragment() {
                     }
                 }
             }
-            true
+            false
         }
         
 

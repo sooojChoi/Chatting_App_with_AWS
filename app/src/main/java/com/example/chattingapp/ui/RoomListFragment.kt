@@ -93,7 +93,35 @@ class RoomListFragment : Fragment(), FragmentManager.OnBackStackChangedListener 
         // 방이 추가되면 화면에 업데이트
         roomViewModel.roomLiveData.observe(viewLifecycleOwner){
             // last msg time을 기준으로 내림차순 정렬하여 나타냄.
-            val room_arr = it ?: ArrayList()
+            val room_arr = ArrayList<Room>()
+
+            // room member로부터 name 설정
+            it.forEach {
+                var newName=""
+                val members = it.members.split("\n")
+                members.forEach{
+                    member->
+                    if(member!=userViewModel.emailLiveData.value){
+                        for(user in userViewModel.otherUsersLiveData.value!!){
+                            if(user.email==member){
+                                newName+="${user.name}\n"
+                                break
+                            }
+                        }
+                    }
+
+                }
+                newName+="${userViewModel.userNameLiveData.value}"
+
+                Log.i("roomListname","${newName}")
+                room_arr.add(Room.builder().name(newName)
+                    .lastMsgTime(it.lastMsgTime)
+                    .members(it.members)
+                    .id(it.id)
+                    .lastMsg(it.lastMsg)
+                    .lastMsgSender(it.lastMsgSender)
+                    .build())
+            }
             Collections.sort(room_arr, RoomMsgTimeComparator())
 
             val adapter = RoomListAdapter(room_arr, roomViewModel)

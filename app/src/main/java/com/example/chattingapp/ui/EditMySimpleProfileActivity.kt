@@ -2,7 +2,6 @@ package com.example.chattingapp.ui
 
 import android.app.AlertDialog
 import android.app.Dialog
-import android.content.DialogInterface
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.activity.viewModels
@@ -10,7 +9,6 @@ import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.User
-import com.example.chattingapp.R
 import com.example.chattingapp.databinding.ActivityEditMySimpleProfileBinding
 import com.example.chattingapp.databinding.EditIntroductionDialogBinding
 import com.example.chattingapp.databinding.EditNameDialogBinding
@@ -18,6 +16,7 @@ import com.example.chattingapp.ui.login.UserInfoViewModel
 import java.lang.IllegalStateException
 import android.util.Log
 import com.amplifyframework.core.model.query.Where
+import com.amplifyframework.datastore.generated.model.Room
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -71,7 +70,8 @@ class EditMySimpleProfileActivity : AppCompatActivity() {
 }
 
 class EditNameDialogFragment: DialogFragment(){
-    private val viewModel: UserInfoViewModel by activityViewModels()
+    private val userViewModel: UserInfoViewModel by activityViewModels()
+    private val roomViewModel: RoomViewModel by activityViewModels()
     val binding by lazy { EditNameDialogBinding.inflate(layoutInflater) }
     lateinit var coroutineScope: CoroutineScope
 
@@ -81,7 +81,7 @@ class EditNameDialogFragment: DialogFragment(){
         return activity?.let {
             val builder = AlertDialog.Builder(it)
 
-            binding.nameEditText.setText(viewModel.userNameLiveData.value)
+            binding.nameEditText.setText(userViewModel.userNameLiveData.value)
 
             builder.setView(binding.root)
                 .setPositiveButton("확인"
@@ -89,14 +89,44 @@ class EditNameDialogFragment: DialogFragment(){
                     coroutineScope.launch {
                         val user = User.builder()
                             .name(binding.nameEditText.text.toString())
-                            .id(viewModel.emailLiveData.value)
-                            .introduction(viewModel.introductionLiveData.value)
+                            .id(userViewModel.emailLiveData.value)
+                            .introduction(userViewModel.introductionLiveData.value)
                             .build()
 
                         Amplify.DataStore.save(user,
                             {
                                 Log.i("MyAmplifyApp", "Post updated successfully!")
-                                viewModel.userNameLiveData.postValue(binding.nameEditText.text.toString())
+                                userViewModel.userNameLiveData.postValue(binding.nameEditText.text.toString())
+                                RoomListAdapter.myName = binding.nameEditText.text.toString()
+
+//                                // 현재 내가 속한 방들의 room name을 바꿔준다. (dynamoDB 상)
+//                                roomViewModel.roomLiveData.value?.forEach {
+//                                    room ->
+//                                    var newName = ""
+//                                    val members = room.members.split("\n")
+//                                    for(i in members){
+//                                        userViewModel.otherUsersLiveData.value?.forEach {
+//                                            if(it.email.equals(i)){
+//                                                newName += "${it.name}\n"
+//                                            }
+//                                        }
+//                                    }
+//                                    newName += "${binding.nameEditText.text.toString()}\n"
+//                                    val room = Room.builder().name(newName)
+//                                        .lastMsgTime(room.lastMsgTime)
+//                                        .members(room.members)
+//                                        .lastMsg(room.lastMsg)
+//                                        .id(room.id)
+//                                        .build()
+//                                    Amplify.DataStore.save(room,
+//                                        {
+//                                            Log.i("MyAmplifyApp", "Room updated successfully!")
+//                                        },
+//                                        {
+//                                            Log.e("MyAmplifyApp", "Could not update room,", it)
+//                                        })
+//                                }
+
                                 dialog.dismiss()
                             },
                             {
@@ -120,7 +150,7 @@ class EditNameDialogFragment: DialogFragment(){
     fun getUser(): User?{
         var result:User? = null
         Amplify.DataStore.query(User::class.java,
-            Where.matches(User.ID.eq(viewModel.emailLiveData.value)),
+            Where.matches(User.ID.eq(userViewModel.emailLiveData.value)),
             { myInfo ->
                 while (myInfo.hasNext()) {
                     val user = myInfo.next()

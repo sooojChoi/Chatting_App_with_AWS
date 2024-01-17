@@ -17,11 +17,11 @@
 
         <ImageView
             android:id="@+id/imageView"
-            android:layout_width="85dp"
-            android:layout_height="85dp"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
             android:layout_gravity="center_vertical"
             android:background="@drawable/round_border_gray"
-            android:padding="22dp"
+            android:padding="16dp"
             android:scaleType="centerCrop"
             android:src="@drawable/user_basic_icon_color" />
 
