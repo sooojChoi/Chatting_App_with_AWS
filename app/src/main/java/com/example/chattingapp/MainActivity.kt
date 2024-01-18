@@ -141,6 +141,7 @@ class MainActivity : AppCompatActivity() {
             .put("data", command)
             .toString())
 
+
         Log.i(TAG,"데이터 전송")
     }
 
@@ -169,10 +170,15 @@ class MainActivity : AppCompatActivity() {
                 .fromName(obj.get("fromName").toString())
                 .id(obj.get("msgId").toString())
                 .build()
+            val lastMsg = if(obj.get("type").toString()=="text"){
+                obj.get("lastMsg").toString()
+            }else{
+                "사진"
+            }
             val roomItem = Room.builder().name(obj.get("roomName").toString())
                 .lastMsgTime(obj.get("lastMsgTime").toString())
                 .members(obj.get("members").toString())
-                .lastMsg(obj.get("lastMsg").toString())
+                .lastMsg(lastMsg)
                 .id(obj.get("roomId").toString())
                 .build()
 

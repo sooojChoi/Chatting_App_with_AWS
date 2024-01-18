@@ -5,11 +5,14 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.hardware.input.InputManager
 import android.os.Build
 import com.example.chattingapp.R
 import android.os.Bundle
 import android.provider.MediaStore
+import java.util.Base64
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -20,6 +23,7 @@ import android.widget.EditText
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
@@ -37,6 +41,7 @@ import com.example.chattingapp.databinding.FragmentChattingBinding
 import com.example.chattingapp.ui.login.UserInfoViewModel
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 
 
@@ -97,53 +102,15 @@ class ChattingFragment : Fragment() {
         return inflater.inflate(R.layout.fragment_chatting, container, false)
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("ClickableViewAccessibility")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val binding = FragmentChattingBinding.bind(view)
 
-        // 전송 버튼 눌리면
+        // 전송 버튼 눌리면 메시지 전송.
         binding.sendButton.setOnClickListener {
-            // 1. viewmodel에 메시지 객체 저장, room 객체 수정
-            // 2. websocket을 통해 서버로 전송
-            // 3. aws lambda 에서 dynamodb에 저장하고, group member들에게 전송
-            // 메시지 받을 때는, viewmodel에 message 저장, room 객체 수정
-
-            val time = System.currentTimeMillis().toString()
-            val messageItem = Message.builder().fromId(userViewModel.emailLiveData.value ?: "")
-                .text(binding.sendEditText.text.toString())
-                .datetime(System.currentTimeMillis().toString())
-                .roomId(room.id)
-                .type("text")
-                .fromName(userViewModel.userNameLiveData.value)
-                .build()
-            val roomItem = Room.builder().name(room.name)
-                .lastMsgTime(time)
-                .members(room.members)
-                .lastMsg(binding.sendEditText.text.toString())
-                .id(room.id)
-                .build()
-
-            // message viewModel에 데이터 추가
-            val msgArr = messageViewModel.msgLiveData.value ?: ArrayList<Message>()
-            msgArr.add(messageItem)
-            messageViewModel.msgLiveData.value = msgArr
-
-            // room viewModel의 데이터 수정
-            val roomArr = roomViewModel.roomLiveData.value!!
-            val newRoomArr = ArrayList<Room>()
-            roomArr.forEach {
-                if(it.id == room.id){
-                    newRoomArr.add(roomItem)
-                }else{
-                    newRoomArr.add(it)
-                }
-            }
-            roomViewModel.roomLiveData.value = newRoomArr
-
-            // json 타입으로 메시지, 방 정보를 만들어서 웹소켓을 통해 서버로 전송한다.
-            val sendingMessage = makeJsonObject(messageItem, roomItem)
-            (activity as MainActivity).sendMessage(sendingMessage)
+            sendMessage(binding.sendEditText.text.toString(), "text")
             binding.sendEditText.setText("")
         }
 
@@ -242,12 +209,37 @@ class ChattingFragment : Fragment() {
             false
         }
 
-        // 가져온 사진 보여주기
+        // 사진이 선택 되었을 때
         val pickImageLauncher: ActivityResultLauncher<Intent> =
             registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
                 if (result.resultCode == AppCompatActivity.RESULT_OK) {
                     val data: Intent? = result.data
                     data?.data?.let {
+                        val inputStream = activity?.contentResolver?.openInputStream(it)
+                        val bm = BitmapFactory.decodeStream(inputStream)
+                        var bytearray = ByteArrayOutputStream()
+
+                        var quality = 100
+                        bm.compress(Bitmap.CompressFormat.JPEG, quality, bytearray)
+                        var result = Base64.getEncoder().encodeToString(bytearray.toByteArray())
+                        while(result.length>32000){
+                            quality-=10
+                            bytearray.reset()
+                            bm.compress(Bitmap.CompressFormat.JPEG, quality, bytearray)
+                            result = Base64.getEncoder().encodeToString(bytearray.toByteArray())
+
+                            if(quality == 0){
+                                break
+                            }
+                        }
+
+                        Log.i("imagebyte",result.length.toString())
+                        if(quality>0){
+                            sendMessage(result, "picture")
+                        }else{
+                            Log.i("picture error","용량이 너무 커서 전송 불가")
+                        }
+
 
                     }
                 }
@@ -261,6 +253,8 @@ class ChattingFragment : Fragment() {
                     pickImageLauncher.launch(gallery)
                 }
             }
+
+        // 사진 보낼 때, 갤러리 오픈
         binding.galleryButton.setOnClickListener {
             val check = if(Build.VERSION.SDK_INT>= Build.VERSION_CODES.TIRAMISU) {
                 ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_IMAGES)
@@ -298,6 +292,55 @@ class ChattingFragment : Fragment() {
             .put("lastMsg",room.lastMsg)
             .put("roomName",room.name)
             .put("members",room.members)
+
+    }
+
+    fun sendMessage(text:String, type:String){
+        // 1. viewmodel에 메시지 객체 저장, room 객체 수정
+        // 2. websocket을 통해 서버로 전송
+        // 3. aws lambda 에서 dynamodb에 저장하고, group member들에게 전송
+        // 메시지 받을 때는, viewmodel에 message 저장, room 객체 수정
+
+        val time = System.currentTimeMillis().toString()
+        val messageItem = Message.builder().fromId(userViewModel.emailLiveData.value ?: "")
+            .text(text)
+            .datetime(System.currentTimeMillis().toString())
+            .roomId(room.id)
+            .type(type)
+            .fromName(userViewModel.userNameLiveData.value)
+            .build()
+        val lastMsg = if(type=="text"){
+            text
+        }else{
+            "사진"
+        }
+        val roomItem = Room.builder().name(room.name)
+            .lastMsgTime(time)
+            .members(room.members)
+            .lastMsg(lastMsg)
+            .id(room.id)
+            .build()
+
+        // message viewModel에 데이터 추가
+        val msgArr = messageViewModel.msgLiveData.value ?: ArrayList<Message>()
+        msgArr.add(messageItem)
+        messageViewModel.msgLiveData.value = msgArr
+
+        // room viewModel의 데이터 수정
+        val roomArr = roomViewModel.roomLiveData.value!!
+        val newRoomArr = ArrayList<Room>()
+        roomArr.forEach {
+            if(it.id == room.id){
+                newRoomArr.add(roomItem)
+            }else{
+                newRoomArr.add(it)
+            }
+        }
+        roomViewModel.roomLiveData.value = newRoomArr
+
+        // json 타입으로 메시지, 방 정보를 만들어서 웹소켓을 통해 서버로 전송한다.
+        val sendingMessage = makeJsonObject(messageItem, roomItem)
+        (activity as MainActivity).sendMessage(sendingMessage)
     }
 
 
