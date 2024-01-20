@@ -1,7 +1,9 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.google.gms.google-services") version "4.4.0" apply false
+    // Add the Google services Gradle plugin
+    id("com.google.gms.google-services")
+   // id("com.google.gms.google-services") version "4.4.0" apply false
 }
 
 android {
@@ -44,7 +46,7 @@ dependencies {
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.12.0"))
 
     // define any required OkHttp artifacts without version
-    implementation("com.squareup.okhttp3:okhttp")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4")
     implementation("androidx.core:core-ktx:1.9.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
@@ -61,8 +63,13 @@ dependencies {
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
-    implementation(platform("com.google.firebase:firebase-bom:32.7.0"))
+
+
+    implementation(platform("com.google.firebase:firebase-bom:32.3.1"))
     implementation("com.google.firebase:firebase-analytics")
+    // Add the dependency for the Cloud Storage library
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation("com.google.firebase:firebase-storage")
 
     // aws cognito
     implementation("aws.sdk.kotlin:cognitoidentityprovider:1.0.0")
@@ -78,5 +85,8 @@ dependencies {
 
     // Support for Java 8 features
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.2.2")
+
+    // amplify s3(storage)
+  //  implementation("com.amplifyframework:aws-storage-s3:2.14.6")
 
 }

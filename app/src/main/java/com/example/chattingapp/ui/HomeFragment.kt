@@ -3,6 +3,9 @@ package com.example.chattingapp.ui
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -10,6 +13,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.activityViewModels
@@ -20,6 +24,7 @@ import com.example.chattingapp.databinding.FragmentHomeBinding
 import com.example.chattingapp.ui.login.UserInfoViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import java.util.Base64
 
 
 class HomeFragment : Fragment(){
@@ -59,6 +64,7 @@ class HomeFragment : Fragment(){
 
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         val binding = FragmentHomeBinding.bind(view)
@@ -68,6 +74,11 @@ class HomeFragment : Fragment(){
         resultLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()){
                 result ->
             if(result.resultCode == Activity.RESULT_OK){
+                val image = result.data?.getStringExtra("image")
+                if(image != null){
+                    Log.i("TAG",image)
+                }
+                viewModel.imageLiveData.value = image
                 // 어차피 datastore가 업데이트 되면서 observe 함수가 동작하여 viewmodel을 수정하고 ui도 수정될 듯.
 //                val name = result.data?.getStringExtra("name") ?: "not found"
 //                val introduction = result.data?.getStringExtra("introduction") ?: "not found"
@@ -81,12 +92,26 @@ class HomeFragment : Fragment(){
         // 내 정보가 바뀌면 화면 정보를 바꾼다.
         viewModel.userNameLiveData.observe(viewLifecycleOwner){
             binding.myNameTextView.text = it
+            if(binding.progressBar.visibility == View.VISIBLE && it!="" && it!=null){
+                binding.myInfoLayout.visibility = View.VISIBLE
+                binding.friendsLayout.visibility = View.VISIBLE
+                binding.progressBar.visibility = View.GONE
+            }
         }
         viewModel.introductionLiveData.observe(viewLifecycleOwner){
             if(it==null || it==""){
                 binding.myIntroTextView.text = "나의 소개글을 입력해보세요!"
             }else {
                 binding.myIntroTextView.text = it
+            }
+        }
+        viewModel.imageLiveData.observe(viewLifecycleOwner){
+            if(it!=null && it!=""){
+                val byteArray = Base64.getDecoder().decode(it)
+                val bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size ?: 0)
+                binding.imageView.clipToOutline = true
+                binding.imageView.setImageBitmap(bm)
+                binding.imageView.setPadding(0,0,0,0)
             }
         }
 
@@ -101,12 +126,12 @@ class HomeFragment : Fragment(){
             intent.putExtra("email", viewModel.emailLiveData.value)
             intent.putExtra("name", viewModel.userNameLiveData.value)
             intent.putExtra("introduction", viewModel.introductionLiveData.value)
+            if(viewModel.imageLiveData.value != null){
+                intent.putExtra("image",viewModel.imageLiveData.value)
+            }
             resultLauncher.launch(intent)
 
         }
-
-
-
 
         viewModel.itemClickEvent.observe(viewLifecycleOwner){
             Log.i("observer","친구 클릭됨. ${it}")

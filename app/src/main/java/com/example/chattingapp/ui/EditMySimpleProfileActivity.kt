@@ -5,6 +5,8 @@ import android.app.AlertDialog
 import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -22,16 +24,23 @@ import java.lang.IllegalStateException
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.amplifyframework.core.model.query.Where
 import com.example.chattingapp.R
+import com.google.firebase.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.ByteArrayOutputStream
+import java.util.Base64
 
 class EditMySimpleProfileActivity : AppCompatActivity() {
     val binding by lazy { ActivityEditMySimpleProfileBinding.inflate(layoutInflater) }
     private val viewModel: UserInfoViewModel by viewModels()
+    lateinit var storage: FirebaseStorage
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
@@ -39,16 +48,23 @@ class EditMySimpleProfileActivity : AppCompatActivity() {
         val email = intent.getStringExtra("email")
         val name = intent.getStringExtra("name")
         val introduction = intent.getStringExtra("introduction")
+        val image = intent.getStringExtra("image")
 
         binding.nameTextView.text = name
         binding.introTextView.text = introduction
         if(introduction == null || introduction==""){
             binding.introTextView.text = "소개글을 입력해보세요!"
         }
+        val byteArray = Base64.getDecoder().decode(image)
+        val bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size ?: 0)
+        binding.imageView3.clipToOutline = true
+        binding.imageView3.setImageBitmap(bm)
+        binding.imageView3.setPadding(0,0,0,0)
 
         viewModel.emailLiveData.value = email
         viewModel.userNameLiveData.value = name
         viewModel.introductionLiveData.value = introduction
+        viewModel.imageLiveData.value = image
 
         // dialog에서 데이터를 변경하면 activity에서도 바꾸기.
         viewModel.userNameLiveData.observe(this){
@@ -75,6 +91,11 @@ class EditMySimpleProfileActivity : AppCompatActivity() {
             introDialogFragment.show(supportFragmentManager,"introDialogFragment")
         }
 
+        storage = FirebaseStorage.getInstance()
+        val ref = storage.reference.child(email!!)
+
+
+
 
         // 가져온 사진 보여주기
         val pickImageLauncher: ActivityResultLauncher<Intent> =
@@ -85,6 +106,26 @@ class EditMySimpleProfileActivity : AppCompatActivity() {
                         binding.imageView3.clipToOutline = true
                         binding.imageView3.setImageURI(it)
                         binding.imageView3.setPadding(0,0,0,0)
+
+                        val stream = contentResolver.openInputStream(it)
+                        val task = ref.putStream(stream!!)
+                        task.addOnFailureListener {
+                            Log.i("upload image","fail")
+                        }.addOnSuccessListener { taskSnapshot ->
+                            Log.i("upload image","success")
+                            val bm = BitmapFactory.decodeStream(contentResolver.openInputStream(it))
+                            var bytearray = ByteArrayOutputStream()
+                            bm.compress(Bitmap.CompressFormat.JPEG, 100, bytearray)
+                            val image = Base64.getEncoder().encodeToString(bytearray.toByteArray())
+                            intent.putExtra("image",image)
+                            setResult(RESULT_OK, intent)
+                        }
+
+//                        Amplify.Storage.uploadInputStream(email!!, stream!!,
+//                            { Log.i("MyAmplifyApp", "Successfully uploaded: ${it.key}") },
+//                            { Log.e("MyAmplifyApp", "Upload failed", it) }
+//                        )
+
 
                     }
                 }

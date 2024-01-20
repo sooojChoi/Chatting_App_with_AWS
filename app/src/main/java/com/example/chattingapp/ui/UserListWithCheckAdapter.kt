@@ -1,10 +1,14 @@
 package com.example.chattingapp.ui
 
+import android.graphics.BitmapFactory
+import android.os.Build
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
 import com.example.chattingapp.databinding.UserRecyclerItemWithCheckboxBinding
 import com.example.chattingapp.ui.login.UserInfoViewModel
+import java.util.Base64
 
 
 data class checkboxData(
@@ -17,6 +21,7 @@ class UserListWithCheckAdapter(private val viewModel: UserInfoViewModel): Recycl
         var checkboxList = arrayListOf<checkboxData>()
     }
     inner class ViewHolder(private val binding: UserRecyclerItemWithCheckboxBinding): RecyclerView.ViewHolder(binding.root){
+        @RequiresApi(Build.VERSION_CODES.O)
         fun setContents(pos:Int){
             val user = viewModel.otherUsersLiveData.value?.get(pos)
             binding.nameTextView.text = user?.name
@@ -40,6 +45,14 @@ class UserListWithCheckAdapter(private val viewModel: UserInfoViewModel): Recycl
                 checkboxList[pos].checked = binding.checkBox.isChecked
             }
 
+            if(user?.image != null && user.image != ""){
+                val byteArray = Base64.getDecoder().decode(user.image)
+                val bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size ?: 0)
+                binding.imageView2.clipToOutline = true
+                binding.imageView2.setImageBitmap(bm)
+                binding.imageView2.setPadding(0,0,0,0)
+            }
+
         }
     }
 
@@ -51,6 +64,7 @@ class UserListWithCheckAdapter(private val viewModel: UserInfoViewModel): Recycl
     }
 
     // ViewHolder에 데이터 연결
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.setContents(position)
     }

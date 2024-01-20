@@ -13,7 +13,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingHorizontal="12dp"
-        android:paddingVertical="10dp">
+        android:paddingVertical="10dp"
+        android:visibility="gone">
 
         <ImageView
             android:id="@+id/imageView"
@@ -58,26 +59,41 @@
     </LinearLayout>
 
     <LinearLayout
+        android:id="@+id/friendsLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical"
+        android:paddingHorizontal="8dp"
         android:paddingVertical="5dp"
-        android:paddingHorizontal="8dp">
+        android:visibility="gone">
 
         <TextView
             android:id="@+id/numOfFriendTextView"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="친구 "
             android:layout_marginBottom="8dp"
+            android:text="친구 "
             android:textColor="@color/gray"
-            android:textSize="14sp"
-            />
+            android:textSize="14sp" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/userListRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
     </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingHorizontal="150dp"
+        android:backgroundTint="@color/white"
+        android:background="@color/white"
+        android:indeterminate="true"
+        android:indeterminateTint="@color/main_orange"
+       android:progressTint="@color/main_orange"
+        android:progressBackgroundTint="@color/light_gray"
+        />
 
 </LinearLayout>

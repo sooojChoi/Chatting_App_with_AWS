@@ -17,6 +17,9 @@
       },
       "api": {
         "chattingapp": {}
+      },
+      "storage": {
+        "myChattingUser": {}
       }
     }
   }

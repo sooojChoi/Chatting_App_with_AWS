@@ -10,15 +10,11 @@ import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
 import android.view.MotionEvent
-import android.view.inputmethod.InputMethodManager
-import android.widget.Button
-import android.widget.EditText
-import android.widget.ImageButton
 import android.widget.Toast
-import android.window.OnBackInvokedDispatcher
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
@@ -30,6 +26,8 @@ import androidx.navigation.ui.setupWithNavController
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.api.aws.AWSApiPlugin
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
+import com.amplifyframework.auth.cognito.AWSCognitoAuthSession
+import com.amplifyframework.auth.result.AuthSessionResult
 import com.amplifyframework.core.Action
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.core.Consumer
@@ -57,6 +55,8 @@ import com.example.chattingapp.ui.RoomViewModel
 import com.example.chattingapp.ui.login.SignUpActivity
 import com.example.chattingapp.ui.login.UserInfoViewModel
 import com.example.chattingapp.ui.login.UserModel
+import com.google.firebase.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -68,6 +68,8 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
 import org.json.JSONObject
+import java.io.File
+import java.util.Base64
 import java.util.Collections
 
 
@@ -84,6 +86,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var coroutineScope: CoroutineScope
     private lateinit var appBarConfiguration: AppBarConfiguration
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
@@ -297,8 +300,9 @@ class MainActivity : AppCompatActivity() {
 
 
     // cognito 사용을 위해 amplify를 초기화한다.
+    @RequiresApi(Build.VERSION_CODES.O)
     fun initAmplify(){
-        // aws의 amplify를 사용하기 위해 초기화. (for using cognito)
+        // aws의 amplify를 사용하기 위해 초기화. (for using cognito, dynamoDB, S3)
         try {
             Amplify.addPlugin(AWSApiPlugin())
         //    Amplify.addPlugin(AWSDataStorePlugin())
@@ -313,8 +317,8 @@ class MainActivity : AppCompatActivity() {
                 .build())
 
             Amplify.addPlugin(AWSCognitoAuthPlugin())
+         //   Amplify.addPlugin(AWSS3StoragePlugin())
             Amplify.configure(applicationContext)
-
 
             Log.i("chattingApp", "Initialized Amplify")
         } catch (error: AmplifyException) {
@@ -322,12 +326,12 @@ class MainActivity : AppCompatActivity() {
         }
         // 현재 인증 세션을 가져온다.
         Amplify.Auth.fetchAuthSession(
-            { //Log.i("AmplifyQuickstart", "Auth session = $it")
+            {
                 if(!it.isSignedIn){
                     // 인증 세션이 없으면 로그인 화면으로 이동
                     startActivity(Intent(this, SignUpActivity::class.java))
                     finish()
-                }else{
+                }else {
                     //인증 세션이 있으면 이메일 정보 가져옴
                     val shared = getSharedPreferences("userInfo", Context.MODE_PRIVATE)
                     // 해당 키의 데이터가 없으면 지정한 기본값을 반환한다.
@@ -339,8 +343,6 @@ class MainActivity : AppCompatActivity() {
                         setupWebSocket()
                         // local store에 대한 observe 등록
                         changeSync()
-
-
                     }else{
                         runOnUiThread {
                             Toast.makeText(this,"서버에 연결할 수 없습니다.", Toast.LENGTH_SHORT).show()
@@ -357,7 +359,10 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun getUserInfoFromDynamoDB(){
+        val localFile = File.createTempFile("images", "jpg")
+
         // local store에 대한 observe 등록
         val tag = "ObserveQuery"
         val onQuerySnapshot: Consumer<DataStoreQuerySnapshot<User>> =
@@ -381,14 +386,35 @@ class MainActivity : AppCompatActivity() {
 
                         RoomListAdapter.myName = it.name
                         MessageListAdapter.myEmail = it.id
+
+                        val islandRef = FirebaseStorage.getInstance().reference.child(it.id)
+                        val ONE_MEGABYTE: Long = 512 * 512
+                        islandRef.getBytes(ONE_MEGABYTE).addOnSuccessListener {
+                            userViewModel.imageLiveData.postValue(Base64.getEncoder().encodeToString(it))
+                        }.addOnFailureListener {
+                            // Handle any errors
+                        }
                     }else{
-                        userArray.add(UserModel(it.id, it.name, it.introduction))
+                        var image:String? = ""
+                        val islandRef = FirebaseStorage.getInstance().reference.child(it.id)
+                        val ONE_MEGABYTE: Long = 512 * 512
+                        islandRef.getBytes(ONE_MEGABYTE).addOnSuccessListener { ba->
+                            image = (Base64.getEncoder().encodeToString(ba))
+                            userArray.add(UserModel(it.id, it.name, it.introduction, image))
+                            userViewModel.otherUsersLiveData.postValue(userArray)
+                        }.addOnFailureListener {
+                            exception->
+                            image = null
+                            userArray.add(UserModel(it.id, it.name, it.introduction, image))
+                            userViewModel.otherUsersLiveData.postValue(userArray)
+                        }
+                       // userArray.add(UserModel(it.id, it.name, it.introduction, null))
+
                     }
 
 
                 }
-                userViewModel.otherUsersLiveData.postValue(userArray)
-              //  viewModel.otherUsersLiveData.value = userArray
+
 
                 getRoomFromDynamoDB()
             }
@@ -491,6 +517,7 @@ class MainActivity : AppCompatActivity() {
 
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     fun changeSync(){
         //local store의 데이터를 지우고 다시 cloud data와 sync 한다.
         // 이때 syncExpression 조건을 변경하고 sync할 수 있다.

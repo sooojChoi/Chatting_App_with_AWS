@@ -21,7 +21,7 @@
             android:layout_marginTop="65dp"
             android:background="@drawable/round_border_gray"
             android:clipToOutline="true"
-            android:elevation="8dp"
+            android:elevation="3dp"
             android:padding="22dp"
             android:scaleType="fitXY"
             android:src="@drawable/user_basic_icon_color"
@@ -73,7 +73,7 @@
             android:layout_marginEnd="12dp"
             android:maxLength="20"
             android:text="TextViewaaaas"
-            android:elevation="6dp"
+            android:elevation="1dp"
             android:background="@drawable/square_border_gray"
             android:textColor="@color/dark_black"
             android:textSize="17sp"
@@ -117,7 +117,8 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/constraint2"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:paddingBottom="10dp">
 
         <TextView
             android:id="@+id/introTextView"
@@ -127,9 +128,9 @@
             android:layout_marginStart="20dp"
             android:layout_marginEnd="12dp"
             android:background="@drawable/square_border_gray"
+            android:elevation="1dp"
             android:maxLength="100"
             android:maxLines="10"
-            android:elevation="6dp"
             android:paddingHorizontal="12dp"
             android:paddingVertical="8dp"
             android:text="blablaldkjfsldkjfl\nsldkjflksjd\nskd\nsdfs\nkfk"

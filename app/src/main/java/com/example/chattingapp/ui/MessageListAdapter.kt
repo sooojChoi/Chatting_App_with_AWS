@@ -13,6 +13,7 @@ import com.example.chattingapp.databinding.MessageMyItemBinding
 import com.example.chattingapp.databinding.MessageMyPictureItemBinding
 import com.example.chattingapp.databinding.MessageYourItemBinding
 import com.example.chattingapp.databinding.MessageYourPictureItemBinding
+import com.example.chattingapp.ui.login.UserInfoViewModel
 import java.text.SimpleDateFormat
 import java.util.Base64
 
@@ -22,7 +23,7 @@ class MyChatViewHolder(val binding: MessageMyItemBinding) :  RecyclerView.ViewHo
 class MyPictureViewHolder(val binding: MessageMyPictureItemBinding): RecyclerView.ViewHolder(binding.root)
 class YourPictureViewHolder(val binding: MessageYourPictureItemBinding): RecyclerView.ViewHolder(binding.root)
 class DateItemViewHolder(val binding: DatetimeItemBinding): RecyclerView.ViewHolder(binding.root)
-class MessageListAdapter(private val messageList: ArrayList<Message>): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+class MessageListAdapter(private val messageList: ArrayList<Message>, private val userViewModel: UserInfoViewModel): RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     companion object {
         var myEmail=""
     }
@@ -82,6 +83,21 @@ class MessageListAdapter(private val messageList: ArrayList<Message>): RecyclerV
                 val dataFormat = SimpleDateFormat("hh:mm")
                 val time = dataFormat.format(msg?.datetime?.toLong())
                 holder.binding.timeTextView.text = time ?: ""
+
+                userViewModel.otherUsersLiveData.value?.forEach {
+                    if(it.email.equals(msg.fromId)){
+                        if(it.image != "" && it.image!=null){
+                            val byteArray = Base64.getDecoder().decode(it.image)
+                            val bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size ?: 0)
+                            holder.binding.yourImageView.clipToOutline = true
+                            holder.binding.yourImageView.setImageBitmap(bm)
+                            holder.binding.yourImageView.setPadding(0,0,0,0)
+
+                        }
+
+                    }
+                }
+
             }
             is MyPictureViewHolder -> {
                 val dataFormat = SimpleDateFormat("hh:mm")
@@ -103,6 +119,20 @@ class MessageListAdapter(private val messageList: ArrayList<Message>): RecyclerV
                 val bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size ?: 0)
                 holder.binding.yourPictureImageView.setImageBitmap(bm)
                 holder.binding.yourPictureImageView.clipToOutline = true
+
+                userViewModel.otherUsersLiveData.value?.forEach {
+                    if(it.email.equals(msg.fromId)){
+                        if(it.image != "" && it.image!=null){
+                            val byteArray = Base64.getDecoder().decode(it.image)
+                            val bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size ?: 0)
+                            holder.binding.yourProfileImageView.clipToOutline = true
+                            holder.binding.yourProfileImageView.setImageBitmap(bm)
+                            holder.binding.yourProfileImageView.setPadding(0,0,0,0)
+
+                        }
+
+                    }
+                }
             }
             is DateItemViewHolder -> {
                 val dataFormat = SimpleDateFormat("yyyy년 MM월 dd일")

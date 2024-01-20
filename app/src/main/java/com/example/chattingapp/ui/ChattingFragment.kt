@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.hardware.input.InputManager
 import android.os.Build
 import com.example.chattingapp.R
 import android.os.Bundle
@@ -25,11 +24,7 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.Toolbar
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.getSystemService
-import androidx.core.content.getSystemService
-import androidx.core.widget.addTextChangedListener
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
@@ -172,7 +167,7 @@ class ChattingFragment : Fragment() {
                         .build())
                 }
             }
-            val adapter = MessageListAdapter(msgForMyRoom)
+            val adapter = MessageListAdapter(msgForMyRoom, userViewModel)
             binding.chattingRecyclerView.adapter = adapter
             binding.chattingRecyclerView.layoutManager = LinearLayoutManager(context).apply {
                 this.stackFromEnd = false  // 가장 최근의 대화를 표시하기 위해 맨 아래로 스크롤 하는 것을 false
