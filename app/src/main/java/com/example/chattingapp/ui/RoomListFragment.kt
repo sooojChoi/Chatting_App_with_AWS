@@ -36,7 +36,7 @@ import java.lang.IllegalStateException
 import java.util.Collections
 
 
-class RoomListFragment : Fragment(), FragmentManager.OnBackStackChangedListener {
+class RoomListFragment : Fragment() {
     private val userViewModel: UserInfoViewModel by activityViewModels()
     private val roomViewModel: RoomViewModel by activityViewModels()
 
@@ -44,7 +44,7 @@ class RoomListFragment : Fragment(), FragmentManager.OnBackStackChangedListener 
         super.onCreate(savedInstanceState)
 
         // listen to backstack changes
-        activity?.getSupportFragmentManager()?.addOnBackStackChangedListener(this);
+       // activity?.getSupportFragmentManager()?.addOnBackStackChangedListener(this);
 
 
     }
@@ -98,12 +98,17 @@ class RoomListFragment : Fragment(), FragmentManager.OnBackStackChangedListener 
             // room member로부터 name 설정
             it.forEach {
                 var newName=""
+                var image:String? = ""
                 val members = it.members.split("\n")
                 members.forEach{
                     member->
                     if(member!=userViewModel.emailLiveData.value){
                         for(user in userViewModel.otherUsersLiveData.value!!){
                             if(user.email==member){
+                                // 단체방이 아닐 경우 image에 값 넣어주기
+                                if(!newName.contains("\n")){
+                                    image = user.image
+                                }
                                 newName+="${user.name}\n"
                                 break
                             }
@@ -119,7 +124,7 @@ class RoomListFragment : Fragment(), FragmentManager.OnBackStackChangedListener 
                     .members(it.members)
                     .id(it.id)
                     .lastMsg(it.lastMsg)
-                    .lastMsgSender(it.lastMsgSender)
+                    .lastMsgSender(image)
                     .build())
             }
             Collections.sort(room_arr, RoomMsgTimeComparator())
@@ -143,14 +148,14 @@ class RoomListFragment : Fragment(), FragmentManager.OnBackStackChangedListener 
 
     }
 
-    override fun onBackStackChanged() {
-        if (activity != null) {
-            // enable Up button only if there are entries on the backstack
-            if (activity?.supportFragmentManager?.backStackEntryCount!! < 1) {
-                (activity as MainActivity?)!!.hideUpButton()
-            }
-        }
-    }
+//    override fun onBackStackChanged() {
+//        if (activity != null) {
+//            // enable Up button only if there are entries on the backstack
+//            if (activity?.supportFragmentManager?.backStackEntryCount!! < 1) {
+//                (activity as MainActivity?)!!.hideUpButton()
+//            }
+//        }
+//    }
 }
 
 
@@ -214,6 +219,10 @@ class SelectFriendDialog: DialogFragment(){
                                         Collections.sort(room_arr, RoomMsgTimeComparator())
 
                                         roomViewModel.roomLiveData.postValue(room_arr)
+                                        roomViewModel.currentRoomId.postValue(roomItem.id)
+                                        Log.i("nav","이동!!")
+                                       // findNavController().navigate(R.id.action_roomListFragment_to_chattingFragment)
+                                        roomViewModel.itemClickEvent.postValue(100)
                                       //  roomViewModel.currentRoomId.postValue(it.item().id)
 
                                         // 방이 성공적으로 만들어졌으면 group도 생성
@@ -237,6 +246,7 @@ class SelectFriendDialog: DialogFragment(){
                                                     Log.e("MyAmplifyApp", "Error creating a group item", it)
                                                 })
                                         }
+
                                     },
                                     { Log.e("MyAmplifyApp", "Error creating a room", it) }
                                 )

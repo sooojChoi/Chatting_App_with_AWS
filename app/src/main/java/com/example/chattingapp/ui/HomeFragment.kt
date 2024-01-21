@@ -17,6 +17,7 @@ import androidx.annotation.RequiresApi
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.activityViewModels
+import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.chattingapp.MainActivity
 import com.example.chattingapp.R
@@ -135,6 +136,16 @@ class HomeFragment : Fragment(){
 
         viewModel.itemClickEvent.observe(viewLifecycleOwner){
             Log.i("observer","친구 클릭됨. ${it}")
+            // 새로운 프래그먼트 띄운다 가운데에 프로필 사진, 이름, 소개글.
+            // 프로필 사진 누르면 크게 볼 수 있다
+            // 하단에 채팅하기 버튼이 있어서 누르면 바로 채팅방으로 이동한다.
+            // roomViewModel에서, 얘랑 나랑 둘만이 member로 있는 방을 찾는다.
+            // 해당 방이 있다면 그 방으로 가고, 없다면 새로운 방 생성
+            // currentRoomId,
+            if(it!=-1 && it!=null){
+                findNavController().navigate(R.id.action_homeFragment_to_userProfileFragment)
+            }
+
         }
 
 
@@ -144,12 +155,6 @@ class HomeFragment : Fragment(){
             binding.userListRecyclerView.layoutManager = LinearLayoutManager(context)
             binding.userListRecyclerView.setHasFixedSize(true)
         }
-
-
-
-
-
-
 
     }
 

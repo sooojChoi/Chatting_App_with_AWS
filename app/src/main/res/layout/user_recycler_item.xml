@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingVertical="5dp"
+    android:paddingVertical="7dp"
     android:paddingHorizontal="8dp">
 
     <ImageView
@@ -23,8 +23,7 @@
         android:layout_marginLeft="10dp"
         android:text="TextView"
         android:textColor="@color/dark_black"
-        android:textSize="16sp"
-        android:textStyle="bold" />
+        android:textSize="16sp" />
 
     <TextView
         android:id="@+id/introTextView"

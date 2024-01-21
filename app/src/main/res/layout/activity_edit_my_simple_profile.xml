@@ -23,7 +23,7 @@
             android:clipToOutline="true"
             android:elevation="3dp"
             android:padding="22dp"
-            android:scaleType="fitXY"
+            android:scaleType="centerCrop"
             android:src="@drawable/user_basic_icon_color"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"

@@ -115,7 +115,7 @@ class EditMySimpleProfileActivity : AppCompatActivity() {
                             Log.i("upload image","success")
                             val bm = BitmapFactory.decodeStream(contentResolver.openInputStream(it))
                             var bytearray = ByteArrayOutputStream()
-                            bm.compress(Bitmap.CompressFormat.JPEG, 100, bytearray)
+                            bm.compress(Bitmap.CompressFormat.JPEG, 50, bytearray)
                             val image = Base64.getEncoder().encodeToString(bytearray.toByteArray())
                             intent.putExtra("image",image)
                             setResult(RESULT_OK, intent)

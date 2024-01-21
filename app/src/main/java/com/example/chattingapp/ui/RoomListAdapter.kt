@@ -1,20 +1,25 @@
 package com.example.chattingapp.ui
 
 import android.content.Context
+import android.graphics.BitmapFactory
+import android.os.Build
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
 import com.amplifyframework.datastore.generated.model.Room
 import com.example.chattingapp.MainActivity
 import com.example.chattingapp.databinding.RoomRecyclerItemBinding
 import java.text.SimpleDateFormat
+import java.util.Base64
 
 class RoomListAdapter(private val rooms: ArrayList<Room>, private val viewModel:RoomViewModel): RecyclerView.Adapter<RoomListAdapter.ViewHolder>() {
     companion object {
         var myName=""
     }
     inner class ViewHolder(private val binding: RoomRecyclerItemBinding): RecyclerView.ViewHolder(binding.root){
+        @RequiresApi(Build.VERSION_CODES.O)
         fun setContents(pos:Int){
             val room = rooms.get(pos)
 
@@ -51,6 +56,14 @@ class RoomListAdapter(private val rooms: ArrayList<Room>, private val viewModel:
             binding.MsgTextView.text = room?.lastMsg ?: "대화를 시작해보세요!"
             binding.msgTimeTextView.text = time
 
+            if(room.lastMsgSender != null && room.lastMsgSender != ""){
+                val byteArray = Base64.getDecoder().decode(room.lastMsgSender)
+                val bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size ?: 0)
+                binding.profileImageView.clipToOutline = true
+                binding.profileImageView.setImageBitmap(bm)
+                binding.profileImageView.setPadding(0,0,0,0)
+            }
+
             binding.root.setOnClickListener {
                 // itemClickEvent 옵저버에게 항목 번호화 클릭되었음을 알림
                 viewModel.itemClickEvent.value = pos
@@ -68,6 +81,7 @@ class RoomListAdapter(private val rooms: ArrayList<Room>, private val viewModel:
     }
 
     // ViewHolder에 데이터 연결
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.setContents(position)
     }
