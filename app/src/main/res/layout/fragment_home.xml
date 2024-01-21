@@ -20,6 +20,7 @@
             android:id="@+id/imageView"
             android:layout_width="80dp"
             android:layout_height="80dp"
+            android:backgroundTint="@color/white"
             android:layout_gravity="center_vertical"
             android:background="@drawable/round_border_gray"
             android:padding="16dp"
@@ -56,7 +57,19 @@
                 android:textSize="14sp" />
         </LinearLayout>
 
+
+
     </LinearLayout>
+
+    <ImageView
+        android:id="@+id/lineImageView"
+        android:layout_width="match_parent"
+        android:layout_height="0.9dp"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginHorizontal="10dp"
+        android:visibility="gone"
+        android:src="@drawable/round_border_filled_gray" />
 
     <LinearLayout
         android:id="@+id/friendsLayout"
@@ -72,6 +85,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="8dp"
+            android:layout_marginLeft="2dp"
             android:text="친구 "
             android:textColor="@color/gray"
             android:textSize="14sp" />
@@ -94,6 +108,8 @@
         android:indeterminateTint="@color/main_orange"
        android:progressTint="@color/main_orange"
         android:progressBackgroundTint="@color/light_gray"
+
+        android:visibility="visible"
         />
 
 </LinearLayout>

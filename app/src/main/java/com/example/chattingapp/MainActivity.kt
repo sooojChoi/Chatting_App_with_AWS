@@ -194,12 +194,17 @@ class MainActivity : AppCompatActivity() {
             // room viewModel의 데이터 수정
             val roomArr = roomViewModel.roomLiveData.value!!
             val newRoomArr = ArrayList<Room>()
+            var check=0
             roomArr.forEach {
                 if(it.id == roomItem.id){
                     newRoomArr.add(roomItem)
+                    check=1
                 }else{
                     newRoomArr.add(it)
                 }
+            }
+            if(check==0){
+                newRoomArr.add(roomItem)
             }
             roomViewModel.roomLiveData.postValue(newRoomArr)
         }
@@ -404,9 +409,21 @@ class MainActivity : AppCompatActivity() {
                             userViewModel.otherUsersLiveData.postValue(userArray)
                         }.addOnFailureListener {
                             exception->
-                            image = null
-                            userArray.add(UserModel(it.id, it.name, it.introduction, image))
-                            userViewModel.otherUsersLiveData.postValue(userArray)
+                            FirebaseStorage.getInstance().reference.child(it.id+".jpg")
+                                .getBytes(ONE_MEGABYTE).addOnSuccessListener { ba->
+                                image = (Base64.getEncoder().encodeToString(ba))
+                                userArray.add(UserModel(it.id, it.name, it.introduction, image))
+                                userViewModel.otherUsersLiveData.postValue(userArray)
+                            }.addOnFailureListener {
+                                    exception->
+                                FirebaseStorage.getInstance().reference.child(it.id+".jpg")
+                                image = null
+                                userArray.add(UserModel(it.id, it.name, it.introduction, image))
+                                userViewModel.otherUsersLiveData.postValue(userArray)
+                            }
+//                            image = null
+//                            userArray.add(UserModel(it.id, it.name, it.introduction, image))
+//                            userViewModel.otherUsersLiveData.postValue(userArray)
                         }
                        // userArray.add(UserModel(it.id, it.name, it.introduction, null))
 

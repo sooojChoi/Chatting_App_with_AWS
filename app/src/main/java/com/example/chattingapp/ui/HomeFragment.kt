@@ -96,6 +96,7 @@ class HomeFragment : Fragment(){
             if(binding.progressBar.visibility == View.VISIBLE && it!="" && it!=null){
                 binding.myInfoLayout.visibility = View.VISIBLE
                 binding.friendsLayout.visibility = View.VISIBLE
+                binding.lineImageView.visibility = View.VISIBLE
                 binding.progressBar.visibility = View.GONE
             }
         }
