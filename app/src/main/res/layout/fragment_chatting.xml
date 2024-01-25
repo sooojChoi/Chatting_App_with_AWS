@@ -10,7 +10,7 @@
     android:paddingVertical="5dp"
     android:backgroundTint="@color/white"
     android:background="@color/white"
-    tools:context=".ui.ChattingFragment">
+    tools:context=".ChattingFragment">
 
      <androidx.recyclerview.widget.RecyclerView
          android:id="@+id/chattingRecyclerView"

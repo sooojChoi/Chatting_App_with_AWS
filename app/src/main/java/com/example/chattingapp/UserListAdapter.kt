@@ -1,4 +1,4 @@
-package com.example.chattingapp.ui
+package com.example.chattingapp
 
 import android.graphics.BitmapFactory
 import android.os.Build
@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
 import com.example.chattingapp.databinding.UserRecyclerItemBinding
-import com.example.chattingapp.ui.login.UserInfoViewModel
+import com.example.chattingapp.viewModel.UserInfoViewModel
 import java.util.Base64
 
 class UserListAdapter(private val viewModel: UserInfoViewModel): RecyclerView.Adapter<UserListAdapter.ViewHolder>() {

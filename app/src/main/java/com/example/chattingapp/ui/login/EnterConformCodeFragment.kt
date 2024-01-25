@@ -11,8 +11,8 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.datastore.generated.model.User
 import com.example.chattingapp.R
+import com.example.chattingapp.viewModel.UserInfoViewModel
 import com.example.chattingapp.databinding.FragmentEnterConformCodeBinding
 
 

@@ -19,7 +19,7 @@
         android:theme="@style/Theme.AppCompat.Light.NoActionBar"
         tools:targetApi="31">
         <activity
-            android:name=".ui.EditMySimpleProfileActivity"
+            android:name=".EditMySimpleProfileActivity"
             android:exported="false" />
         <activity
             android:name=".ui.login.SignUpActivity"

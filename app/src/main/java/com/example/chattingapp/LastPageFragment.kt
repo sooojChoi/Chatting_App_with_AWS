@@ -1,4 +1,4 @@
-package com.example.chattingapp.ui
+package com.example.chattingapp
 
 import android.content.Context
 import android.os.Bundle
@@ -8,16 +8,9 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.lifecycle.lifecycleScope
 import com.amplifyframework.auth.cognito.result.AWSCognitoAuthSignOutResult
 import com.amplifyframework.core.Amplify
-import com.amplifyframework.datastore.generated.model.User
-import com.example.chattingapp.MainActivity
-import com.example.chattingapp.R
 import com.example.chattingapp.databinding.FragmentLastPageBinding
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 class LastPageFragment : Fragment() {
 

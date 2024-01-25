@@ -1,6 +1,5 @@
-package com.example.chattingapp.ui
+package com.example.chattingapp
 
-import android.content.Context
 import android.graphics.BitmapFactory
 import android.os.Build
 import android.util.Log
@@ -9,12 +8,12 @@ import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
 import com.amplifyframework.datastore.generated.model.Room
-import com.example.chattingapp.MainActivity
 import com.example.chattingapp.databinding.RoomRecyclerItemBinding
+import com.example.chattingapp.viewModel.RoomViewModel
 import java.text.SimpleDateFormat
 import java.util.Base64
 
-class RoomListAdapter(private val rooms: ArrayList<Room>, private val viewModel:RoomViewModel): RecyclerView.Adapter<RoomListAdapter.ViewHolder>() {
+class RoomListAdapter(private val rooms: ArrayList<Room>, private val viewModel: RoomViewModel): RecyclerView.Adapter<RoomListAdapter.ViewHolder>() {
     companion object {
         var myName=""
     }

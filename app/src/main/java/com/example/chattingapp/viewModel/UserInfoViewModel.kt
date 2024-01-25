@@ -1,9 +1,7 @@
-package com.example.chattingapp.ui.login
+package com.example.chattingapp.viewModel
 
-import android.renderscript.ScriptGroup.Input
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import java.io.InputStream
 
 
 data class UserModel(val email:String, var name:String, var introduction:String, var image: String?)

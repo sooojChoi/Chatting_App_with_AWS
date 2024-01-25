@@ -1,4 +1,4 @@
-package com.example.chattingapp.ui
+package com.example.chattingapp
 
 import android.app.AlertDialog
 import android.app.Dialog
@@ -14,7 +14,6 @@ import android.view.ViewGroup
 import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ViewModelProvider
@@ -24,11 +23,10 @@ import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.Group
 import com.amplifyframework.datastore.generated.model.Message
 import com.amplifyframework.datastore.generated.model.Room
-import com.example.chattingapp.MainActivity
-import com.example.chattingapp.R
 import com.example.chattingapp.databinding.FragmentRoomListBinding
 import com.example.chattingapp.databinding.SelectFriendDialogBinding
-import com.example.chattingapp.ui.login.UserInfoViewModel
+import com.example.chattingapp.viewModel.RoomViewModel
+import com.example.chattingapp.viewModel.UserInfoViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

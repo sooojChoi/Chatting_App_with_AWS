@@ -1,4 +1,4 @@
-package com.example.chattingapp.ui
+package com.example.chattingapp.viewModel
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel

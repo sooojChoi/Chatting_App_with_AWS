@@ -1,4 +1,4 @@
-package com.example.chattingapp.ui
+package com.example.chattingapp
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -8,7 +8,6 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
-import com.example.chattingapp.R
 import android.os.Bundle
 import android.provider.MediaStore
 import java.util.Base64
@@ -31,9 +30,10 @@ import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.amplifyframework.datastore.generated.model.Message
 import com.amplifyframework.datastore.generated.model.Room
-import com.example.chattingapp.MainActivity
 import com.example.chattingapp.databinding.FragmentChattingBinding
-import com.example.chattingapp.ui.login.UserInfoViewModel
+import com.example.chattingapp.viewModel.MessageViewModel
+import com.example.chattingapp.viewModel.RoomViewModel
+import com.example.chattingapp.viewModel.UserInfoViewModel
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import org.json.JSONObject
 import java.io.ByteArrayOutputStream
@@ -43,7 +43,7 @@ import java.text.SimpleDateFormat
 class ChattingFragment : Fragment() {
     private val userViewModel: UserInfoViewModel by activityViewModels()
     private val roomViewModel: RoomViewModel by activityViewModels()
-    private val messageViewModel:MessageViewModel by activityViewModels()
+    private val messageViewModel: MessageViewModel by activityViewModels()
     lateinit var room:Room
     private lateinit var callback: OnBackPressedCallback
 

@@ -1,4 +1,4 @@
-package com.example.chattingapp.ui
+package com.example.chattingapp
 
 import android.content.Context
 import android.graphics.BitmapFactory
@@ -16,10 +16,9 @@ import androidx.navigation.fragment.findNavController
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.Group
 import com.amplifyframework.datastore.generated.model.Room
-import com.example.chattingapp.MainActivity
-import com.example.chattingapp.R
 import com.example.chattingapp.databinding.FragmentUserProfileBinding
-import com.example.chattingapp.ui.login.UserInfoViewModel
+import com.example.chattingapp.viewModel.RoomViewModel
+import com.example.chattingapp.viewModel.UserInfoViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch

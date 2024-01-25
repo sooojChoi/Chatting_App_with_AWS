@@ -1,4 +1,4 @@
-package com.example.chattingapp.ui
+package com.example.chattingapp
 
 import android.Manifest
 import android.app.AlertDialog
@@ -19,7 +19,6 @@ import com.amplifyframework.datastore.generated.model.User
 import com.example.chattingapp.databinding.ActivityEditMySimpleProfileBinding
 import com.example.chattingapp.databinding.EditIntroductionDialogBinding
 import com.example.chattingapp.databinding.EditNameDialogBinding
-import com.example.chattingapp.ui.login.UserInfoViewModel
 import java.lang.IllegalStateException
 import android.util.Log
 import androidx.activity.result.ActivityResultLauncher
@@ -27,8 +26,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import com.amplifyframework.core.model.query.Where
-import com.example.chattingapp.R
-import com.google.firebase.Firebase
+import com.example.chattingapp.viewModel.RoomViewModel
+import com.example.chattingapp.viewModel.UserInfoViewModel
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

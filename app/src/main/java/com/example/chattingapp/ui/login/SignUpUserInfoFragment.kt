@@ -9,8 +9,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
 import com.amplifyframework.auth.AuthUserAttributeKey
@@ -18,10 +16,10 @@ import com.amplifyframework.auth.options.AuthSignUpOptions
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.User
 import com.example.chattingapp.R
+import com.example.chattingapp.viewModel.UserInfoViewModel
 import com.example.chattingapp.databinding.FragmentSignUpUserInfoBinding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainCoroutineDispatcher
 import kotlinx.coroutines.launch
 import java.lang.reflect.InvocationTargetException
 

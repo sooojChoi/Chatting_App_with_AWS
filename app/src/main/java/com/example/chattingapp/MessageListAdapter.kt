@@ -1,8 +1,7 @@
-package com.example.chattingapp.ui
+package com.example.chattingapp
 
 import android.graphics.BitmapFactory
 import android.os.Build
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
@@ -13,7 +12,7 @@ import com.example.chattingapp.databinding.MessageMyItemBinding
 import com.example.chattingapp.databinding.MessageMyPictureItemBinding
 import com.example.chattingapp.databinding.MessageYourItemBinding
 import com.example.chattingapp.databinding.MessageYourPictureItemBinding
-import com.example.chattingapp.ui.login.UserInfoViewModel
+import com.example.chattingapp.viewModel.UserInfoViewModel
 import java.text.SimpleDateFormat
 import java.util.Base64
 
