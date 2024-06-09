@@ -12,7 +12,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.chattingapp"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 33
         versionCode = 1
         versionName = "1.0"
@@ -76,7 +76,7 @@ dependencies {
     implementation("aws.sdk.kotlin:cognitoidentity:1.0.0")
 
     //amplify
-    implementation("com.amplifyframework:aws-auth-cognito:2.14.6")
+    implementation("com.amplifyframework:aws-auth-cognito:2.16.1")
     implementation("com.amplifyframework:core:2.14.6")
 
     // Amplify API and Datastore dependencies
@@ -87,6 +87,8 @@ dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:1.2.2")
 
     // amplify s3(storage)
-  //  implementation("com.amplifyframework:aws-storage-s3:2.14.6")
+    implementation("com.amplifyframework:aws-storage-s3:2.16.1")
 
+    //noinspection GradleCompatible
+    implementation("com.android.support:support-compat:28.0.0")
 }

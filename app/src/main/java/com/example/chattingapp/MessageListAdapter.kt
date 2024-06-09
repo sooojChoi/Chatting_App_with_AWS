@@ -1,18 +1,26 @@
 package com.example.chattingapp
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Build
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
+import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.Message
+import com.amplifyframework.storage.StorageException
+import com.amplifyframework.storage.StoragePath
 import com.example.chattingapp.databinding.DatetimeItemBinding
 import com.example.chattingapp.databinding.MessageMyItemBinding
 import com.example.chattingapp.databinding.MessageMyPictureItemBinding
 import com.example.chattingapp.databinding.MessageYourItemBinding
 import com.example.chattingapp.databinding.MessageYourPictureItemBinding
 import com.example.chattingapp.viewModel.UserInfoViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Base64
 
@@ -103,9 +111,17 @@ class MessageListAdapter(private val messageList: ArrayList<Message>, private va
                 val time = dataFormat.format(msg?.datetime?.toLong())
                 holder.binding.timeTextView.text = time ?: ""
 
-                val byteArray = Base64.getDecoder().decode(msg?.text)
-                val bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size ?: 0)
-                holder.binding.myPictureImageView.setImageBitmap(bm)
+//                val byteArray = Base64.getDecoder().decode(msg?.text)
+//                val bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size ?: 0)
+//                holder.binding.myPictureImageView.setImageBitmap(bm)
+                Amplify.Storage.getUrl(
+                    StoragePath.fromString(msg!!.text),
+                    { Log.i("MyAmplifyApp", "Successfully generated: ${it.url}")
+                        val image = BitmapFactory.decodeStream((it.url.openStream()))
+                        holder.binding.myPictureImageView.setImageBitmap(image)
+                    },
+                    { Log.e("MyAmplifyApp", "URL generation failure", it) }
+                )
                 holder.binding.myPictureImageView.clipToOutline = true
             }
             is YourPictureViewHolder -> {
@@ -114,14 +130,24 @@ class MessageListAdapter(private val messageList: ArrayList<Message>, private va
                 val time = dataFormat.format(msg?.datetime?.toLong())
                 holder.binding.timeTextView.text = time ?: ""
 
-                val byteArray = Base64.getDecoder().decode(msg?.text)
-                val bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size ?: 0)
-                holder.binding.yourPictureImageView.setImageBitmap(bm)
+                Amplify.Storage.getUrl(
+                    StoragePath.fromString(msg!!.text),
+                    { Log.i("MyAmplifyApp", "Successfully generated: ${it.url}")
+                        val image = BitmapFactory.decodeStream((it.url.openStream()))
+                        holder.binding.yourProfileImageView.setImageBitmap(image)
+                    },
+                    { Log.e("MyAmplifyApp", "URL generation failure", it) }
+                )
+
+//                val byteArray = Base64.getDecoder().decode(msg?.text)
+//                val bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size ?: 0)
+//                holder.binding.yourPictureImageView.setImageBitmap(bm)
                 holder.binding.yourPictureImageView.clipToOutline = true
 
                 userViewModel.otherUsersLiveData.value?.forEach {
                     if(it.email.equals(msg.fromId)){
                         if(it.image != "" && it.image!=null){
+
                             val byteArray = Base64.getDecoder().decode(it.image)
                             val bm = BitmapFactory.decodeByteArray(byteArray, 0, byteArray?.size ?: 0)
                             holder.binding.yourProfileImageView.clipToOutline = true

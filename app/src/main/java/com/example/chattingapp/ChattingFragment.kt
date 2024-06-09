@@ -28,8 +28,10 @@ import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.amplifyframework.core.Amplify
 import com.amplifyframework.datastore.generated.model.Message
 import com.amplifyframework.datastore.generated.model.Room
+import com.amplifyframework.storage.StoragePath
 import com.example.chattingapp.databinding.FragmentChattingBinding
 import com.example.chattingapp.viewModel.MessageViewModel
 import com.example.chattingapp.viewModel.RoomViewModel
@@ -211,29 +213,43 @@ class ChattingFragment : Fragment() {
                     val data: Intent? = result.data
                     data?.data?.let {
                         val inputStream = activity?.contentResolver?.openInputStream(it)
-                        val bm = BitmapFactory.decodeStream(inputStream)
-                        var bytearray = ByteArrayOutputStream()
 
-                        var quality = 100
-                        bm.compress(Bitmap.CompressFormat.JPEG, quality, bytearray)
-                        var result = Base64.getEncoder().encodeToString(bytearray.toByteArray())
-                        while(result.length>32000){
-                            quality-=10
-                            bytearray.reset()
-                            bm.compress(Bitmap.CompressFormat.JPEG, quality, bytearray)
-                            result = Base64.getEncoder().encodeToString(bytearray.toByteArray())
-
-                            if(quality == 0){
-                                break
-                            }
-                        }
-
-                        Log.i("imagebyte",result.length.toString())
-                        if(quality>0){
-                            sendMessage(result, "picture")
+                        if (inputStream != null) {
+                            Amplify.Storage.uploadInputStream(
+                                StoragePath.fromString("public/${it}"), inputStream,
+                                {
+                                    Log.i("MyAmplifyApp", "Successfully uploaded: ${it.path}")
+                                    sendMessage(it.path, "picture")
+                                },
+                                { Log.e("MyAmplifyApp", "Upload failed", it) }
+                            )
                         }else{
-                            Log.i("picture error","용량이 너무 커서 전송 불가")
+                            Log.i("Test","S3에 업로드 실패")
                         }
+
+//                        val bm = BitmapFactory.decodeStream(inputStream)
+//                        var bytearray = ByteArrayOutputStream()
+//
+//                        var quality = 100
+//                        bm.compress(Bitmap.CompressFormat.JPEG, quality, bytearray)
+//                        var result = Base64.getEncoder().encodeToString(bytearray.toByteArray())
+//                        while(result.length>32000){
+//                            quality-=10
+//                            bytearray.reset()
+//                            bm.compress(Bitmap.CompressFormat.JPEG, quality, bytearray)
+//                            result = Base64.getEncoder().encodeToString(bytearray.toByteArray())
+//
+//                            if(quality == 0){
+//                                break
+//                            }
+//                        }
+//
+//                        Log.i("imagebyte",result.length.toString())
+//                        if(quality>0){
+//                            sendMessage(result, "picture")
+//                        }else{
+//                            Log.i("picture error","용량이 너무 커서 전송 불가")
+//                        }
 
 
                     }

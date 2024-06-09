@@ -1,10 +1,14 @@
 package com.example.chattingapp
 
 import android.Manifest
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.ContentValues.TAG
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -16,6 +20,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.findNavController
@@ -43,6 +50,9 @@ import com.amplifyframework.datastore.generated.model.Group
 import com.amplifyframework.datastore.generated.model.Message
 import com.amplifyframework.datastore.generated.model.Room
 import com.amplifyframework.datastore.generated.model.User
+import com.amplifyframework.storage.StorageException
+import com.amplifyframework.storage.StoragePath
+import com.amplifyframework.storage.s3.AWSS3StoragePlugin
 import com.example.chattingapp.databinding.ActivityMainBinding
 import com.example.chattingapp.ui.login.SignUpActivity
 import com.example.chattingapp.viewModel.MessageViewModel
@@ -66,6 +76,8 @@ import java.util.Collections
 
 
 class MainActivity : AppCompatActivity() {
+    final val CHANNEL_ID = "messageNotification"
+    val notificationId = 123
     val binding by lazy { ActivityMainBinding.inflate(layoutInflater) }
     private lateinit var ws: WebSocket
     lateinit var requestPermissionLauncher: ActivityResultLauncher<String>
@@ -110,14 +122,35 @@ class MainActivity : AppCompatActivity() {
             ActivityResultContracts.RequestPermission(),
         ) { isGranted: Boolean ->
             if (isGranted) {
+                Log.i("알림 기능","권한 허용됨, 채널 등록")
+               // createNotificationChannel()
                 // FCM SDK (and your app) can post notifications.
             } else {
                 // TODO: Inform user that that your app will not show notifications.
+                Log.i("notification", "권한이 허용되지 않아 알림 기능 사용 불가")
             }
         }
 
 
 
+    }
+
+    // 알림 채널 생성
+    private fun createNotificationChannel() {
+        // Create the NotificationChannel, but only on API 26+ because
+        // the NotificationChannel class is new and not in the support library
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = getString(R.string.notification_channel_name)
+            val descriptionText = getString(R.string.notification_channel_description)
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+                description = descriptionText
+            }
+            // Register the channel with the system
+            val notificationManager: NotificationManager =
+                getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
     }
 
     override fun onSupportNavigateUp(): Boolean {
@@ -143,6 +176,7 @@ class MainActivity : AppCompatActivity() {
     fun sendMessage(obj: JSONObject){
         // websocket으로 메시지 전송
         Log.i("websocket sending process","MainActivity sendMessage 함수 호출됨")
+
 
         ws.send(obj.toString())
         Log.i("websocket sending process","데이터 전송됨")
@@ -199,7 +233,10 @@ class MainActivity : AppCompatActivity() {
                 newRoomArr.add(roomItem)
             }
             roomViewModel.roomLiveData.postValue(newRoomArr)
+
         }
+
+
     }
 
 
@@ -314,7 +351,7 @@ class MainActivity : AppCompatActivity() {
                 .build())
 
             Amplify.addPlugin(AWSCognitoAuthPlugin())
-         //   Amplify.addPlugin(AWSS3StoragePlugin())
+            Amplify.addPlugin(AWSS3StoragePlugin())
             Amplify.configure(applicationContext)
 
             Log.i("chattingApp", "Initialized Amplify")
@@ -353,6 +390,21 @@ class MainActivity : AppCompatActivity() {
         )
 
 
+
+    }
+
+    fun uploadInputStream(uri: Uri) {
+        val stream = contentResolver.openInputStream(uri)
+
+        if (stream != null) {
+            Amplify.Storage.uploadInputStream(
+                StoragePath.fromString("public/example"), stream,
+                { Log.i("MyAmplifyApp", "Successfully uploaded: ${it.path}") },
+                { Log.e("MyAmplifyApp", "Upload failed", it) }
+            )
+        }else{
+            Log.i("Test","S3에 업로드 실패")
+        }
 
     }
 
@@ -518,6 +570,7 @@ class MainActivity : AppCompatActivity() {
                     roomIdArray?.add(roomId)
                     messageViewModel.roomIdWithMessage.postValue(roomIdArray)
                 }
+
             },
             {
                 Log.i(TAG, "Qeury failed", it)
